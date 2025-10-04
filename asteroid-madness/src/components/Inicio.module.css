@@ -1,0 +1,140 @@
+.inicioContainer {
+  height: 100vh;
+  width: 100vw;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  background-color: #5595d2; /* Azul NASA */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Logo junto al navbar */
+.logoContainer {
+  position: absolute;
+  top: 15px;       /* 👈 Más arriba */
+  right: 40px;     /* 👈 A la derecha */
+  z-index: 1500;
+}
+
+.logo {
+  width: 140px;
+  opacity: 0.95;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.slide {
+  flex: 1;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #5595d2;
+}
+
+.heroImage {
+  position: absolute;
+  z-index: 1;
+  opacity: 0.95;
+  transition: all 0.6s ease-in-out;
+  object-fit: contain;
+}
+
+/* Estilo específico para el meteorito del Slide 1 */
+.heroImageSlide1 {
+  max-width: 40%;        /* 👈 más pequeño (ajusta % según lo quieras) */
+  left: 15%;             /* 👈 lo mueve un poco a la izquierda */
+  top: 50%;              /* 👈 lo centra verticalmente */
+  transform: translateY(-50%); /* 👈 centra exacto en vertical */
+}
+
+
+/* Slide 2 */
+.heroImageSlide2 {
+  max-width: 45%;
+  left: 12%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Slide 3 → más grande y más a la izquierda */
+.heroImageSlide3 {
+  max-width: 70%;     /* 👈 un poco más grande */
+  left: 0%;          /* 👈 desplazada más a la izquierda */
+  top: 65%;           /* 👈 centrada verticalmente */
+  transform: translateY(-50%);
+}
+
+/* Contenido */
+.content {
+  z-index: 10;
+  text-align: left;
+  color: #fff;
+  max-width: 45%;
+  padding: 2rem;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+  position: relative;
+  margin-left: auto;
+  margin-right: 5%;
+}
+
+.title {
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+/* Amarillo para la parte destacada */
+.highlight {
+  color: #FFD700; /* Amarillo NASA */
+}
+
+
+/* Highlight amarillo (por defecto) */
+.highlight {
+  color: #FFD700;
+}
+
+/* Highlight verde para USGS */
+.content .highlight:contains("USGS") {
+  color: #32CD32; /* Verde USGS */
+}
+
+
+/* Indicadores abajo */
+.slideIndicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.7rem;
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator:hover,
+.active {
+  background-color: #fff;
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
