@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import FormularioAsteroide from "./FormularioAsteroide";
-import ImpactDay from "./ImpactDay";
+import VisualizacionAsteroide from "./VisualizacionAsteroide"; // Nuevo import
 
 interface AsteroidData {
   nombre: string;
@@ -17,30 +17,25 @@ interface AsteroidData {
 
 function Simular() {
   const [asteroidData, setAsteroidData] = useState<AsteroidData | null>(null);
-  const [showImpactDay, setShowImpactDay] = useState(false);
+  const [showVisualization, setShowVisualization] = useState(false);
 
   const handleSimulateData = (data: AsteroidData) => {
     setAsteroidData(data);
-    setShowImpactDay(true);
+    setShowVisualization(true);
   };
 
   return (
     <section>
-      {!showImpactDay ? (
+      {!showVisualization ? (
         <FormularioAsteroide onSimulate={handleSimulateData} />
       ) : (
         asteroidData && (
-          <ImpactDay
-            nombre={asteroidData.nombre}
-            semiMajorAxis={asteroidData.semiMajorAxis}
-            eccentricity={asteroidData.eccentricity}
-            inclination={asteroidData.inclination}
-            longitudeAscending={asteroidData.longitudeAscending}
-            argumentPerihelion={asteroidData.argumentPerihelion}
-            initialPhase={asteroidData.initialPhase}
-            masa={asteroidData.masa}
-            radio={asteroidData.radio}
-            densidad={asteroidData.densidad}
+          <VisualizacionAsteroide
+            asteroidData={asteroidData}
+            onBack={() => {
+              setShowVisualization(false);
+              setAsteroidData(null);
+            }}
           />
         )
       )}
