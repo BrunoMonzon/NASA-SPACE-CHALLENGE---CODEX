@@ -23,7 +23,11 @@ interface PopupInfo {
   y: number;
 }
 
-const FormularioAsteroide = () => {
+interface FormularioAsteroideProps {
+  onSimulate: (data: AsteroidData) => void;
+}
+
+const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   const [selectedTab, setSelectedTab] = useState<TabType>('Seleccionar');
   const [searchQuery, setSearchQuery] = useState('');
   const [popup, setPopup] = useState<PopupInfo>({ show: false, content: '', x: 0, y: 0 });
@@ -54,7 +58,8 @@ const FormularioAsteroide = () => {
   };
 
   const handleSimulate = () => {
-    // TODO: Enviar datos al componente Sim.tsx
+    // Enviar datos al componente padre (Simular.tsx)
+    onSimulate(formData);
     console.log('Simulando con datos:', formData);
   };
 
