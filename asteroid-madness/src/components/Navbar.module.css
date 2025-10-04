@@ -1,0 +1,46 @@
+.navbar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  width: 588px;
+  height: 61px;
+  margin: 0 auto;
+  
+  background-color: rgba(82, 143, 202, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 20px;
+  padding: 0 20px;
+}
+
+.navButton {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  color: white;
+  
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 20px;
+  border-radius: 10px;
+  
+  transition: all 0.3s ease;
+}
+
+.navButton:hover {
+  opacity: 0.8;
+}
+
+.navButton.selected {
+  color: #3B3B3B;
+  background-color: rgba(255, 255, 255, 0.8);
+}
