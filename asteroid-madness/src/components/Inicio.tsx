@@ -1,6 +1,5 @@
 // src/components/Inicio.tsx
 import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar';
 import styles from './Inicio.module.css';
 
 const slides = [
@@ -34,17 +33,11 @@ function Inicio() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleNavigate = (section: 'Inicio' | 'Aprender' | 'Simular') => {
-    console.log(`Navegando a: ${section}`);
-  };
-
   const currentSlideData = slides[currentSlide];
 
   return (
     <section className={styles.inicioContainer}>
-      <Navbar onNavigate={handleNavigate} />
-
-      {/* Logo NASA más arriba, junto al navbar */}
+      {/* Logo NASA (sin navbar aquí) */}
       <div className={styles.logoContainer}>
         <img 
           src="/assets/images/Logo Nasa Space Challenge.png" 
