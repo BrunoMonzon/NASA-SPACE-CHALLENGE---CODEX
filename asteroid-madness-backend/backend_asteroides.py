@@ -3,11 +3,17 @@ import requests
 import numpy as np
 from scipy.integrate import odeint
 from datetime import datetime, timedelta
+import subprocess
+import json
+import os
 
 app = Flask(__name__)
 
 # NASA API Key
 API_KEY = 'eH13yd2sijPWcdfRxxcZTNY1ureIwsOoY2pyGCOa'
+
+# Path to C++ executable
+CPP_EXECUTABLE = os.path.join(os.getcwd(), 'NASAHackathon.exe')
 
 # Constants
 G = 4 * np.pi**2  # Gravitational constant in AU^3 / (solar_mass * year^2)
@@ -24,6 +30,156 @@ EARTH_OMEGA = 0.0
 EARTH_OMEGA_NODE = 0.0
 EARTH_M = 0.0
 
+
+def ejecutar_cpp(args):
+    """Execute C++ executable and return JSON output."""
+    try:
+        # Construct command
+        cmd = [CPP_EXECUTABLE] + args
+        
+        # Execute command
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            timeout=60
+        )
+        
+        if result.returncode != 0:
+            return {
+                'error': 'C++ executable returned error',
+                'stderr': result.stderr,
+                'stdout': result.stdout
+            }, 500
+        
+        # Parse JSON output
+        try:
+            return json.loads(result.stdout), 200
+        except json.JSONDecodeError as e:
+            return {
+                'error': 'Failed to parse C++ output as JSON',
+                'output': result.stdout,
+                'parse_error': str(e)
+            }, 500
+            
+    except subprocess.TimeoutExpired:
+        return {'error': 'C++ executable timed out'}, 504
+    except FileNotFoundError:
+        return {
+            'error': f'C++ executable not found at {CPP_EXECUTABLE}',
+            'hint': 'Check CPP_EXECUTABLE path in code'
+        }, 500
+    except Exception as e:
+        return {'error': f'Failed to execute C++: {str(e)}'}, 500
+
+
+@app.route('/asteroide-cpp', methods=['GET'])
+def asteroide_cpp():
+    """Simulate asteroid using C++ executable with asteroid ID."""
+    asteroide_id = request.args.get('id')
+    if not asteroide_id:
+        return jsonify({'error': 'Parameter "id" is required'}), 400
+    
+    args = ['--asteroide-id', asteroide_id]
+    
+    # Optional parameters
+    if request.args.get('diametro'):
+        args.extend(['--diametro', request.args.get('diametro')])
+    if request.args.get('densidad'):
+        args.extend(['--densidad', request.args.get('densidad')])
+    if request.args.get('generar_resumen') == 'true':
+        args.append('--generar-resumen')
+    if request.args.get('calculos_extendidos') == 'true':
+        args.append('--calculos-extendidos')
+    
+    result, status = ejecutar_cpp(args)
+    return jsonify(result), status
+
+
+@app.route('/simular-cpp', methods=['POST'])
+def simular_cpp():
+    """Simulate asteroid orbit using C++ executable with orbital parameters."""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Request body required'}), 400
+    
+    # Validate required orbital parameters
+    required_params = ['a', 'e', 'i', 'omega', 'Omega', 'M']
+    if not all(param in data for param in required_params):
+        return jsonify({'error': 'Missing required orbital elements: a, e, i, omega, Omega, M'}), 400
+    
+    # Build arguments for C++ executable
+    args = [
+        '--semieje-mayor', str(data['a']),
+        '--excentricidad', str(data['e']),
+        '--inclinacion', str(data['i']),
+        '--nodo-ascendente', str(data['Omega']),
+        '--arg-perihelio', str(data['omega']),
+        '--anomalia-media', str(data['M'])
+    ]
+    
+    # Optional parameters
+    if 'diametro' in data:
+        args.extend(['--diametro', str(data['diametro'])])
+    if 'densidad' in data:
+        args.extend(['--densidad', str(data['densidad'])])
+    if data.get('generar_resumen'):
+        args.append('--generar-resumen')
+    if data.get('calculos_extendidos'):
+        args.append('--calculos-extendidos')
+    
+    result, status = ejecutar_cpp(args)
+    return jsonify(result), status
+
+
+@app.route('/gemini', methods=['POST'])
+def gemini_query():
+    """Query Gemini AI using C++ executable."""
+    data = request.get_json()
+    if not data or 'consulta' not in data:
+        return jsonify({'error': 'Request body must contain "consulta" field'}), 400
+    
+    args = ['--consulta-gemini', data['consulta']]
+    
+    result, status = ejecutar_cpp(args)
+    return jsonify(result), status
+
+
+@app.route('/cpp-config', methods=['GET'])
+def cpp_config():
+    """Get C++ executable configuration and check if it exists."""
+    exists = os.path.isfile(CPP_EXECUTABLE)
+    return jsonify({
+        'executable_path': CPP_EXECUTABLE,
+        'exists': exists,
+        'absolute_path': os.path.abspath(CPP_EXECUTABLE)
+    })
+
+
+@app.route('/cpp-config', methods=['PUT'])
+def update_cpp_config():
+    """Update C++ executable path."""
+    global CPP_EXECUTABLE
+    data = request.get_json()
+    if not data or 'path' not in data:
+        return jsonify({'error': 'Request body must contain "path" field'}), 400
+    
+    new_path = data['path']
+    if not os.path.isfile(new_path):
+        return jsonify({
+            'error': 'File not found',
+            'path': new_path
+        }), 404
+    
+    CPP_EXECUTABLE = new_path
+    return jsonify({
+        'message': 'C++ executable path updated',
+        'new_path': CPP_EXECUTABLE
+    })
+
+
+# ==================== ORIGINAL PYTHON ENDPOINTS ====================
 
 def tierra_pos(t):
     """Calculate Earth's position at time t (in years)."""
@@ -233,7 +389,15 @@ def simular():
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint."""
-    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+    cpp_exists = os.path.isfile(CPP_EXECUTABLE)
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'cpp_executable': {
+            'path': CPP_EXECUTABLE,
+            'exists': cpp_exists
+        }
+    })
 
 
 if __name__ == '__main__':
