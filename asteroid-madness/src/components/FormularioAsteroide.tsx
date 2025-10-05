@@ -65,7 +65,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
     if (!searchQuery.trim()) return;
 
     try {
-      const response = await fetch('http://localhost:5000/asteroid', {
+      const response = await fetch('https://nasa-space-challenge-codex.onrender.com/asteroid', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
