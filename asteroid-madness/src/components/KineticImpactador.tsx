@@ -55,10 +55,10 @@ const KineticImpactador: React.FC<KineticImpactadorProps> = ({ onBack, asteroidD
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Impactadores Cinéticos</h2>
+      <h2 className={styles.title}>Kinetic Impactors</h2>
       
       <div className={styles.content}>
-        <p>Contenido del componente Impactadores Cinéticos</p>
+        <p>Kinetic Impactors Component Content</p>
         <div style={{ display: 'flex', gap: 24, width: '100%', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
             <OrbitKineticImpactadorCrash 
@@ -77,31 +77,31 @@ const KineticImpactador: React.FC<KineticImpactadorProps> = ({ onBack, asteroidD
 
           <aside style={{ width: 380 }}>
             <div className={styles.panel}>
-              <h3 className={styles.panelTitle}>Parámetros del asteroide</h3>
+              <h3 className={styles.panelTitle}>Asteroid Parameters</h3>
               <div className={styles.paramsList}>
-                <ParamDisplay label="a (Semieje mayor)" value={asteroidData.semiMajorAxis} unit="AU" min={0.5} max={3} />
-                <ParamDisplay label="e (Excentricidad)" value={asteroidData.eccentricity} unit="" min={0} max={1} />
-                <ParamDisplay label="i (Inclinación)" value={asteroidData.inclination} unit="°" min={0} max={180} />
-                <ParamDisplay label="Ω (Nodo ascendente)" value={asteroidData.longitudeAscending} unit="°" min={0} max={360} />
-                <ParamDisplay label="ω (Arg. perihelio)" value={asteroidData.argumentPerihelion} unit="°" min={0} max={360} />
-                <ParamDisplay label="M₀ (Fase inicial)" value={asteroidData.initialPhase} unit="°" min={0} max={360} />
+                <ParamDisplay label="a (Semi-major Axis)" value={asteroidData.semiMajorAxis} unit="AU" min={0.5} max={3} />
+                <ParamDisplay label="e (Eccentricity)" value={asteroidData.eccentricity} unit="" min={0} max={1} />
+                <ParamDisplay label="i (Inclination)" value={asteroidData.inclination} unit="°" min={0} max={180} />
+                <ParamDisplay label="Ω (Ascending Node)" value={asteroidData.longitudeAscending} unit="°" min={0} max={360} />
+                <ParamDisplay label="ω (Arg. of Perihelion)" value={asteroidData.argumentPerihelion} unit="°" min={0} max={360} />
+                <ParamDisplay label="M₀ (Initial Phase)" value={asteroidData.initialPhase} unit="°" min={0} max={360} />
               </div>
             </div>
 
             <div className={styles.panel} style={{ marginTop: 16 }}>
-              <h3 className={styles.panelTitle}>Parámetros de la nave</h3>
+              <h3 className={styles.panelTitle}>Spacecraft Parameters</h3>
               <div className={styles.paramsList}>
                 <ParamSlider
-                  label="Tiempo de lanzamiento"
+                  label="Launch Time"
                   value={spacecraftData.launchTime}
-                  unit="días desde J2000"
+                  unit="days since J2000"
                   min={-1000}
                   max={1000}
                   step={10}
                   onChange={(value) => handleSpacecraftChange('launchTime', value)}
                 />
                 <ParamSlider
-                  label="Velocidad de la nave"
+                  label="Spacecraft Velocity"
                   value={spacecraftData.velocity}
                   unit="km/s"
                   min={5}
@@ -120,28 +120,28 @@ const KineticImpactador: React.FC<KineticImpactadorProps> = ({ onBack, asteroidD
           <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))', padding: '10px 18px', borderRadius: 8, display: 'flex', gap: 20, alignItems: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 18, height: 18, background: '#CCE7F8', borderRadius: 4, border: '1px solid rgba(0,0,0,0.15)' }} />
-              <span style={{ color: '#ffffffcc' }}>Tierra</span>
+              <span style={{ color: '#ffffffcc' }}>Earth</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 18, height: 18, background: '#262E37', borderRadius: 4, border: '1px solid rgba(0,0,0,0.25)' }} />
-              <span style={{ color: '#ffffffcc' }}>Asteroide</span>
+              <span style={{ color: '#ffffffcc' }}>Asteroid</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 18, height: 18, background: '#00FF00', borderRadius: 4, border: '1px solid rgba(0,0,0,0.15)' }} />
-              <span style={{ color: '#ffffffcc' }}>orbita nave</span>
+              <span style={{ color: '#ffffffcc' }}>Spacecraft Orbit</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 18, height: 18, background: '#FF00FF', borderRadius: 4, border: '1px solid rgba(0,0,0,0.15)' }} />
-              <span style={{ color: '#ffffffcc' }}>orbita asteroide tras impacto</span>
+              <span style={{ color: '#ffffffcc' }}>Asteroid Orbit Post-Impact</span>
             </div>
           </div>
         </div>
       </div>
 
       <button className={styles.backButton} onClick={onBack}>
-        Volver al menú de mitigación
+        Back to Mitigation Menu
       </button>
     </div>
   );

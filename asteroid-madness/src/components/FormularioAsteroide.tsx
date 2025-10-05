@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import styles from './FormularioAsteroide.module.css';
 
-// Backend base URL (configure with VITE_BACKEND_URL). If not set, fallback to localhost:5000
-const BACKEND_URL = (import.meta as any)?.env?.VITE_BACKEND_URL || 'http://localhost:5000';
-
-type TabType = 'Seleccionar' | 'Configurar';
+type TabType = 'Select' | 'Configure';
 
 interface AsteroidData {
   nombre: string;
@@ -17,6 +14,7 @@ interface AsteroidData {
   masa: number;
   radio: number;
   densidad: number;
+  velocidad: number;
 }
 
 interface ImpactData {
@@ -44,9 +42,10 @@ interface FormularioAsteroideProps {
 }
 
 const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
-  const [selectedTab, setSelectedTab] = useState<TabType>('Seleccionar');
+  const [selectedTab, setSelectedTab] = useState<TabType>('Select');
+  const [searchQuery, setSearchQuery] = useState('');
   const [popup, setPopup] = useState<PopupInfo>({ show: false, content: '', x: 0, y: 0 });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   
   const [formData, setFormData] = useState<AsteroidData>({
     nombre: '',
@@ -58,7 +57,8 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
     initialPhase: 0,
     masa: 0,
     radio: 0,
-    densidad: 0
+    densidad: 0,
+    velocidad: 0
   });
 
   const handleSearch = async () => {
@@ -74,11 +74,11 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
       });
 
       if (!response.ok) {
-        throw new Error('Asteroide no encontrado o error en el servidor');
+        throw new Error('Asteroid not found or server error');
       }
 
       const data = await response.json();
-      console.log('Resultado:', data);
+      console.log('Result:', data);
 
       setFormData({
         nombre: data.full_name || '',
@@ -90,18 +90,17 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
         initialPhase: data['M₀'] || 0,
         masa: data['masa (kg)'] || 0,
         radio: data['radio (km)'] || 0,
-        densidad: data['densidad (kg/m³)'] || 0
+        densidad: data['densidad (kg/m³)'] || 0,
+        velocidad: data['velocidad (m/s)'] || 0
       });
 
-      setSelectedTab('Configurar');
+      setSelectedTab('Configure');
 
     } catch (error) {
-      console.error('Error al buscar asteroide:', error);
-      alert('Error al buscar el asteroide. Verifica el nombre o la conexión con el servidor.');
+      console.error('Error searching for asteroid:', error);
+      alert('Error searching for the asteroid. Please check the name or server connection.');
     }
   };
-
-  
 
   const handleInputChange = (field: keyof AsteroidData, value: string) => {
     setFormData(prev => ({
@@ -111,7 +110,6 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   };
 
   const handleSimulate = () => {
-    // Solo enviar datos del asteroide al padre, sin llamar a /impact aún
     const emptyImpactData: ImpactData = {
       impact: false
     };
@@ -139,113 +137,59 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   };
 
   const parameterInfo: Record<string, string> = {
-    semiMajorAxis: 'Distancia promedio del asteroide al Sol, medida en unidades astronómicas (UA).',
-    eccentricity: 'Medida de cuánto se desvía la órbita de una forma circular perfecta (0 = círculo, cerca de 1 = muy elíptica).',
-    inclination: 'Ángulo entre el plano orbital del asteroide y el plano de la eclíptica, medido en grados.',
-    longitudeAscending: 'Ángulo desde el punto vernal hasta el nodo ascendente de la órbita, medido en grados.',
-    argumentPerihelion: 'Ángulo desde el nodo ascendente hasta el perihelio, medido en grados.',
-    initialPhase: 'Posición angular inicial del asteroide en su órbita en el momento t=0.',
-    masa: 'Masa del asteroide medida en kilogramos (kg).',
-    radio: 'Radio del asteroide medido en kilómetros (km).',
-    densidad: 'Densidad del asteroide medida en gramos por centímetro cúbico (g/cm³).'
+    semiMajorAxis: 'Average distance of the asteroid from the Sun, measured in astronomical units (AU).',
+    eccentricity: 'Measure of how much the orbit deviates from a perfect circle (0 = circle, close to 1 = highly elliptical).',
+    inclination: 'Angle between the asteroid’s orbital plane and the ecliptic plane, measured in degrees.',
+    longitudeAscending: 'Angle from the vernal equinox to the ascending node of the orbit, measured in degrees.',
+    argumentPerihelion: 'Angle from the ascending node to the perihelion, measured in degrees.',
+    initialPhase: 'Initial angular position of the asteroid in its orbit at time t=0.',
+    masa: 'Mass of the asteroid, measured in tons.',
+    radio: 'Radius of the asteroid, measured in kilometers (km).',
+    densidad: 'Density of the asteroid, measured in grams per cubic centimeter (g/cm³).',
+    velocidad: 'Velocity of the asteroid relative to Earth at the time of impact, measured in meters per second (m/s).'
   };
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Formulario Asteroide</h2>
+      <h2 className={styles.title}>Asteroid Form</h2>
       
       <div className={styles.tabContainer}>
         <button
-          className={`${styles.tabButton} ${selectedTab === 'Seleccionar' ? styles.tabSelected : ''}`}
-          onClick={() => setSelectedTab('Seleccionar')}
+          className={`${styles.tabButton} ${selectedTab === 'Select' ? styles.tabSelected : ''}`}
+          onClick={() => setSelectedTab('Select')}
         >
-          Seleccionar
+          Select
         </button>
         <button
-          className={`${styles.tabButton} ${selectedTab === 'Configurar' ? styles.tabSelected : ''}`}
-          onClick={() => setSelectedTab('Configurar')}
+          className={`${styles.tabButton} ${selectedTab === 'Configure' ? styles.tabSelected : ''}`}
+          onClick={() => setSelectedTab('Configure')}
         >
-          Configurar
+          Configure
         </button>
       </div>
 
       <div className={styles.content}>
-        {selectedTab === 'Seleccionar' ? (
+        {selectedTab === 'Select' ? (
           <div className={styles.searchContainer}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label className={styles.label}>Fecha inicio</label>
-                <input
-                  type="date"
-                  className={styles.input}
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label className={styles.label}>Fecha fin</label>
-                <input
-                  type="date"
-                  className={styles.input}
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <button className={styles.simulateButton} onClick={async () => { await fetchAsteroids(); }}>
-                  Listar
-                </button>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 12 }}>
-              {loading && <div>Cargando asteroides...</div>}
-              {error && <div style={{ color: 'var(--danger, #ff6b6b)' }}>{error}</div>}
-              {!loading && asteroids.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <label className={styles.label}>Seleccione asteroide</label>
-                  <select className={styles.input} value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
-                    <option value="">-- Seleccionar --</option>
-                    {asteroids.map(a => (
-                      <option key={a.id} value={a.id}>{a.name} (a={a.a.toFixed(3)} AU)</option>
-                    ))}
-                  </select>
-                  <div>
-                    <button
-                      className={styles.simulateButton}
-                      onClick={() => {
-                        const ast = asteroids.find(x => x.id === selectedId);
-                        if (ast) {
-                          // Map backend asteroid to FormularioAsteroide AsteroidData and simulate
-                          const mapped = {
-                            nombre: ast.name,
-                            semiMajorAxis: ast.a,
-                            eccentricity: ast.e,
-                            inclination: (ast.i || 0) * 180 / Math.PI,
-                            longitudeAscending: (ast.Omega || 0) * 180 / Math.PI,
-                            argumentPerihelion: (ast.omega || 0) * 180 / Math.PI,
-                            initialPhase: (ast.M || 0) * 180 / Math.PI,
-                            masa: ast.masa || 0,
-                            radio: ast.radio || 0,
-                            densidad: ast.densidad || 0
-                          };
-                          onSimulate(mapped);
-                        }
-                      }}
-                      disabled={!selectedId}
-                    >
-                      Simular
-                    </button>
-                  </div>
-                </div>
-              )}
-              {!loading && asteroids.length === 0 && <div style={{ marginTop: 8 }}>No se han listado asteroides aún.</div>}
-            </div>
+            <input
+              type="text"
+              className={styles.searchBar}
+              placeholder="Search by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <img
+              src="/material-symbols-light_search-rounded.svg"
+              alt="Search"
+              className={styles.searchIcon}
+              onClick={handleSearch}
+            />
           </div>
         ) : (
           <div className={styles.formContainer}>
             <div className={styles.inputGroup}>
-              <label className={styles.label}>Nombre del objeto</label>
+              <label className={styles.label}>Object Name</label>
               <input
                 type="text"
                 className={`${styles.input} ${styles.inputWide}`}
@@ -257,7 +201,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
             <div className={styles.grid}>
               <div className={styles.inputGroup}>
                 <div className={styles.labelContainer}>
-                  <label className={styles.label}>Semi-major axis (a)</label>
+                  <label className={styles.label}>Semi-major Axis (a, AU)</label>
                   <img
                     src="/ask.svg"
                     alt="Info"
@@ -297,7 +241,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
 
               <div className={styles.inputGroup}>
                 <div className={styles.labelContainer}>
-                  <label className={styles.label}>Inclination (i)</label>
+                  <label className={styles.label}>Inclination (i, degrees)</label>
                   <img
                     src="/ask.svg"
                     alt="Info"
@@ -317,7 +261,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
 
               <div className={styles.inputGroup}>
                 <div className={styles.labelContainer}>
-                  <label className={styles.label}>Longitude of ascending node (Ω)</label>
+                  <label className={styles.label}>Longitude of Ascending Node (Ω, degrees)</label>
                   <img
                     src="/ask.svg"
                     alt="Info"
@@ -337,7 +281,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
 
               <div className={styles.inputGroup}>
                 <div className={styles.labelContainer}>
-                  <label className={styles.label}>Argument of perihelion (ω)</label>
+                  <label className={styles.label}>Argument of Perihelion (ω, degrees)</label>
                   <img
                     src="/ask.svg"
                     alt="Info"
@@ -357,7 +301,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
 
               <div className={styles.inputGroup}>
                 <div className={styles.labelContainer}>
-                  <label className={styles.label}>M₀ (Fase inicial)</label>
+                  <label className={styles.label}>Initial Phase (M₀, degrees)</label>
                   <img
                     src="/ask.svg"
                     alt="Info"
@@ -377,7 +321,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
 
               <div className={styles.inputGroup}>
                 <div className={styles.labelContainer}>
-                  <label className={styles.label}>Masa</label>
+                  <label className={styles.label}>Mass (tons)</label>
                   <img
                     src="/ask.svg"
                     alt="Info"
@@ -397,7 +341,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
 
               <div className={styles.inputGroup}>
                 <div className={styles.labelContainer}>
-                  <label className={styles.label}>Radio</label>
+                  <label className={styles.label}>Radius (km)</label>
                   <img
                     src="/ask.svg"
                     alt="Info"
@@ -417,7 +361,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
 
               <div className={styles.inputGroup}>
                 <div className={styles.labelContainer}>
-                  <label className={styles.label}>Densidad</label>
+                  <label className={styles.label}>Density (kg/m³)</label>
                   <img
                     src="/ask.svg"
                     alt="Info"
@@ -434,6 +378,26 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
                   onChange={(e) => handleInputChange('densidad', e.target.value)}
                 />
               </div>
+
+              <div className={styles.inputGroup}>
+                <div className={styles.labelContainer}>
+                  <label className={styles.label}>Velocity (m/s)</label>
+                  <img
+                    src="/ask.svg"
+                    alt="Info"
+                    className={styles.infoIcon}
+                    onMouseEnter={(e) => showPopup(parameterInfo.velocidad, e)}
+                    onMouseLeave={hidePopup}
+                  />
+                </div>
+                <input
+                  type="number"
+                  step="any"
+                  className={styles.input}
+                  value={formData.velocidad || ''}
+                  onChange={(e) => handleInputChange('velocidad', e.target.value)}
+                />
+              </div>
             </div>
 
             <button 
@@ -441,7 +405,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
               onClick={handleSimulate}
               disabled={isLoading}
             >
-              {isLoading ? 'Simulando...' : 'Simular'}
+              {isLoading ? 'Simulating...' : 'Simulate'}
             </button>
           </div>
         )}

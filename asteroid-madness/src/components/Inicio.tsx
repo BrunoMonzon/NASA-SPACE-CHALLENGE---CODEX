@@ -1,24 +1,23 @@
-// src/components/Inicio.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Inicio.module.css';
 
 const slides = [
   {
     heroImage: '/assets/images/logo meteorito.png',
-    title: 'Calcula y analiza el impacto de un asteroide en la Tierra.',
-    subtitle: 'Simula sus consecuencias',
+    title: 'Calculate and analyze the impact of an asteroid on Earth.',
+    subtitle: 'Simulate its consequences',
     highlight: null
   },
   {
     heroImage: '/assets/images/fondo Orbita.png',
-    title: 'Órbitas calculadas con los datos de',
+    title: 'Orbits calculated with data from',
     highlight: 'Small-Body Database Query',
     subtitle: ''
   },
   {
     heroImage: '/assets/images/fondo mapa impacto.png',
-    title: 'Calcula las consecuencias sísmicas, poblacionales y ambientales, usamos los datos de',
-    highlight: 'USGS',  // 👈 verde
+    title: 'Calculate seismic, population, and environmental consequences using data from',
+    highlight: 'USGS',  // 👈 green
     subtitle: ''
   }
 ];
@@ -37,7 +36,7 @@ function Inicio() {
 
   return (
     <section className={styles.inicioContainer}>
-      {/* Logo NASA (sin navbar aquí) */}
+      {/* NASA Logo (no navbar here) */}
       <div className={styles.logoContainer}>
         <img 
           src="/assets/images/Logo Nasa Space Challenge.png" 
@@ -46,7 +45,7 @@ function Inicio() {
         />
       </div>
 
-      {/* Slide activo */}
+      {/* Active Slide */}
       <div className={styles.slide}>
         <img 
           src={currentSlideData.heroImage} 
@@ -67,7 +66,7 @@ function Inicio() {
           )}
         </div>
 
-        {/* Indicadores de slide */}
+        {/* Slide Indicators */}
         <div className={styles.slideIndicators}>
           {slides.map((_, index) => (
             <span

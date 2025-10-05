@@ -54,7 +54,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
     setIsLoadingImpact(true);
     
     try {
-      // Llamar a la API /impact con los datos actuales del asteroide
+      // Call the /impact API with current asteroid data
       const response = await fetch('http://localhost:5000/impact', {
         method: 'POST',
         headers: {
@@ -71,18 +71,18 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Error al predecir impacto');
+        throw new Error('Error predicting impact');
       }
 
       const impactData: ImpactData = await response.json();
-      console.log('Resultado predicción de impacto:', impactData);
+      console.log('Impact prediction result:', impactData);
 
-      // Pasar los datos de impacto al componente padre
+      // Pass impact data to parent component
       onContinue(impactData);
       
     } catch (error) {
-      console.error('Error al predecir impacto:', error);
-      alert('Error al realizar la predicción de impacto. Verifica la conexión con el servidor.');
+      console.error('Error predicting impact:', error);
+      alert('Error predicting impact. Please check the server connection.');
     } finally {
       setIsLoadingImpact(false);
     }
@@ -98,7 +98,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
   const getCollisionStatus = () => {
     if (hasIntersections) {
       return {
-        status: 'Cercano',
+        status: 'Close',
         color: '#FF6B6B',
         moid: '0.00'
       };
@@ -108,7 +108,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
     const moidKm = moid * 149597870.7;
     
     return {
-      status: 'Lejano',
+      status: 'Far',
       color: '#51CF66',
       moid: moidKm.toFixed(2)
     };
@@ -116,7 +116,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Comparación órbita de la Tierra vs órbita Asteroide</h1>
+      <h1 className={styles.title}>Earth Orbit vs. Asteroid Orbit Comparison</h1>
 
       <div className={styles.mainGrid}>
         <div className={styles.visualizationContainer}>
@@ -137,18 +137,18 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
           <div className={styles.legend}>
             <div className={styles.legendItem}>
               <div className={styles.legendLineEarth} />
-              <span>Tierra</span>
+              <span>Earth</span>
             </div>
             <div className={styles.legendItem}>
               <div className={styles.legendLineAsteroid} />
-              <span>Asteroide</span>
+              <span>Asteroid</span>
             </div>
           </div>
         </div>
 
         <div className={styles.sidebar}>
           <div className={styles.panel}>
-            <h3 className={styles.panelTitle}>Colisión Orbital</h3>
+            <h3 className={styles.panelTitle}>Orbital Collision</h3>
             <div className={styles.statusCard}>
               <div className={styles.statusTitle} style={{ backgroundColor: getCollisionStatus().color }}>
                 {getCollisionStatus().status}
@@ -160,23 +160,23 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
                 ({(parseFloat(getCollisionStatus().moid) / 149597870.7).toFixed(4)} AU)
               </div>
             </div>
-            {getCollisionStatus().status === 'Cercano' && (
+            {getCollisionStatus().status === 'Close' && (
               <button 
                 className={styles.continueButton} 
                 onClick={handleContinueToImpactDay} 
                 style={{ marginTop: '15px', width: '100%' }}
                 disabled={isLoadingImpact}
               >
-                {isLoadingImpact ? 'Calculando impacto...' : 'Continuar a Impact Day →'}
+                {isLoadingImpact ? 'Calculating Impact...' : 'Continue to Impact Day →'}
               </button>
             )}
           </div>
 
           <div className={styles.panel}>
-            <h3 className={styles.panelTitle}>Parámetros del asteroide</h3>
+            <h3 className={styles.panelTitle}>Asteroid Parameters</h3>
             <div className={styles.paramsList}>
               <RangeInput 
-                label="a (Semieje mayor)"
+                label="a (Semi-major Axis, AU)"
                 value={currentAsteroidData.semiMajorAxis}
                 min={0.5}
                 max={3}
@@ -184,7 +184,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
                 onChange={(value) => handleParamChange('semiMajorAxis', value)}
               />
               <RangeInput 
-                label="e (Excentricidad)"
+                label="e (Eccentricity)"
                 value={currentAsteroidData.eccentricity}
                 min={0}
                 max={1}
@@ -192,7 +192,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
                 onChange={(value) => handleParamChange('eccentricity', value)}
               />
               <RangeInput 
-                label="i (Inclinación)"
+                label="i (Inclination, degrees)"
                 value={currentAsteroidData.inclination}
                 min={0}
                 max={180}
@@ -200,7 +200,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
                 onChange={(value) => handleParamChange('inclination', value)}
               />
               <RangeInput 
-                label="Ω (Nodo ascendente)"
+                label="Ω (Longitude of Ascending Node, degrees)"
                 value={currentAsteroidData.longitudeAscending}
                 min={0}
                 max={360}
@@ -208,7 +208,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
                 onChange={(value) => handleParamChange('longitudeAscending', value)}
               />
               <RangeInput 
-                label="ω (Arg. perihelio)"
+                label="ω (Argument of Perihelion, degrees)"
                 value={currentAsteroidData.argumentPerihelion}
                 min={0}
                 max={360}
@@ -216,7 +216,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
                 onChange={(value) => handleParamChange('argumentPerihelion', value)}
               />
               <RangeInput 
-                label="M₀ (Fase inicial)"
+                label="M₀ (Initial Phase, degrees)"
                 value={currentAsteroidData.initialPhase}
                 min={0}
                 max={360}
@@ -227,18 +227,18 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
           </div>
 
           <div className={styles.panel}>
-            <h3 className={styles.panelTitle}>Datos Físicos</h3>
+            <h3 className={styles.panelTitle}>Physical Data</h3>
             <div className={styles.physicalData}>
               <div className={styles.dataRow}>
-                <span>Masa:</span>
-                <span>{currentAsteroidData.masa.toExponential(2)} kg</span>
+                <span>Mass:</span>
+                <span>{currentAsteroidData.masa.toString()} tons</span>
               </div>
               <div className={styles.dataRow}>
-                <span>Radio:</span>
+                <span>Radius:</span>
                 <span>{currentAsteroidData.radio.toFixed(2)} km</span>
               </div>
               <div className={styles.dataRow}>
-                <span>Densidad:</span>
+                <span>Density:</span>
                 <span>{currentAsteroidData.densidad.toFixed(2)} g/cm³</span>
               </div>
             </div>
@@ -246,7 +246,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
 
           <div className={styles.buttonContainer}>
             <button className={styles.backButton} onClick={onBack}>
-              ← Volver al Formulario
+              ← Back to Form
             </button>
           </div>
         </div>
@@ -255,7 +255,7 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
   );
 };
 
-// Componente para inputs range
+// Component for range inputs
 interface RangeInputProps {
   label: string;
   value: number;
@@ -269,7 +269,7 @@ const RangeInput: React.FC<RangeInputProps> = ({ label, value, min, max, step, o
   return (
     <div className={styles.paramItem}>
       <div className={styles.paramHeader}>
-        <span>{label}:</span>
+        <span>{label}</span>
         <span className={styles.paramValue}>{value.toFixed(2)}</span>
       </div>
       <div className={styles.rangeInput}>

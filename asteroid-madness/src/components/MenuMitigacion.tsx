@@ -16,33 +16,33 @@ const MenuMitigacion: React.FC<MenuMitigacionProps> = ({
 }) => {
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Seleccionar una estrategia para mitigar impacto</h2>
+      <h2 className={styles.title}>Select an Impact Mitigation Strategy</h2>
       
       <div className={styles.buttonGrid}>
         <button className={styles.mitigationButton} onClick={onSelectKinetic}>
           <div className={styles.buttonContent}>
-            <img src="/impactador.png" alt="Impactadores Cinéticos" className={styles.buttonImage} />
-            <span className={styles.buttonTitle}>Impactadores Cinéticos</span>
+            <img src="/impactador.png" alt="Kinetic Impactors" className={styles.buttonImage} />
+            <span className={styles.buttonTitle}>Kinetic Impactors</span>
           </div>
         </button>
         
         <button className={styles.mitigationButton} onClick={onSelectGravity}>
           <div className={styles.buttonContent}>
-            <img src="/tractor.png" alt="Tractores Gravitacionales" className={styles.buttonImage} />
-            <span className={styles.buttonTitle}>Tractores Gravitacionales</span>
+            <img src="/tractor.png" alt="Gravity Tractors" className={styles.buttonImage} />
+            <span className={styles.buttonTitle}>Gravity Tractors</span>
           </div>
         </button>
         
         <button className={styles.mitigationButton} onClick={onSelectLaser}>
           <div className={styles.buttonContent}>
-            <img src="/laser.png" alt="Ablación con Láser" className={styles.buttonImage} />
-            <span className={styles.buttonTitle}>Ablación con Láser</span>
+            <img src="/laser.png" alt="Laser Ablation" className={styles.buttonImage} />
+            <span className={styles.buttonTitle}>Laser Ablation</span>
           </div>
         </button>
       </div>
 
       <button className={styles.backButton} onClick={onBack}>
-        Volver a consecuencias
+        Back to Consequences
       </button>
     </div>
   );

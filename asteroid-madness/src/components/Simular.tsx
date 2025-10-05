@@ -19,6 +19,7 @@ interface AsteroidData {
   masa: number;
   radio: number;
   densidad: number;
+  velocidad: number;
 }
 
 interface ImpactData {
@@ -40,7 +41,7 @@ function Simular() {
   const [asteroidData, setAsteroidData] = useState<AsteroidData | null>(null);
   const [impactData, setImpactData] = useState<ImpactData | null>(null);
   const [currentView, setCurrentView] = useState<ViewState>('form');
-  const [editedPhysicalParams, setEditedPhysicalParams] = useState<{ masa: number, radio: number, densidad: number } | null>(null);
+  const [editedPhysicalParams, setEditedPhysicalParams] = useState<{ masa: number, radio: number, densidad: number, velocidad: number } | null>(null);
   const [selectedCoordinate, setSelectedCoordinate] = useState<[number, number] | null>(null);
 
   const handleSimulateData = (data: AsteroidData, impact: ImpactData) => {
@@ -58,7 +59,7 @@ function Simular() {
     setCurrentView('impactDay');
   };
 
-  const handleShowConsequences = (physicalParams: { masa: number, radio: number, densidad: number }, coordinate: [number, number]) => {
+  const handleShowConsequences = (physicalParams: { masa: number, radio: number, densidad: number, velocidad: number }, coordinate: [number, number]) => {
     setEditedPhysicalParams(physicalParams);
     setSelectedCoordinate(coordinate);
     setCurrentView('consequences');
@@ -122,6 +123,7 @@ function Simular() {
           masa={asteroidData.masa}
           radio={asteroidData.radio}
           densidad={asteroidData.densidad}
+          velocidad={asteroidData.velocidad}
           impactData={impactData}
           onShowConsequences={handleShowConsequences}
           onBack={handleBackToVisualization}
@@ -134,6 +136,7 @@ function Simular() {
           masa={editedPhysicalParams ? editedPhysicalParams.masa : asteroidData.masa}
           radio={editedPhysicalParams ? editedPhysicalParams.radio : asteroidData.radio}
           densidad={editedPhysicalParams ? editedPhysicalParams.densidad : asteroidData.densidad}
+          velocidad={editedPhysicalParams ? editedPhysicalParams.velocidad : asteroidData.velocidad}
           coordenada={selectedCoordinate || (impactData?.latitude && impactData?.longitude 
             ? [impactData.longitude, impactData.latitude] 
             : [-55.183219, -16.653422])}

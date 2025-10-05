@@ -22,9 +22,9 @@ interface GravityTractorProps {
 
 const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack }) => {
   const [spacecraftParams, setSpacecraftParams] = useState({
-    masaNave: 20000, // 20 toneladas por defecto
-    distanciaOperacion: 200, // metros
-    tiempoOperacion: 10, // años
+    masaNave: 20000, // 20 tons by default
+    distanciaOperacion: 200, // meters
+    tiempoOperacion: 10, // years
     modoOperacion: 'hovering' as 'hovering' | 'orbiting'
   });
 
@@ -35,10 +35,8 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
     }));
   };
 
-  // Cálculo mejorado que considera la masa del asteroide
   const calcularAceleracion = () => {
     const G = 6.67430e-11;
-    // La aceleración es G * m_nave / d^2 (no depende de la masa del asteroide)
     const a_GT = G * spacecraftParams.masaNave / Math.pow(spacecraftParams.distanciaOperacion, 2);
     return a_GT;
   };
@@ -50,7 +48,6 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
     return deltaV;
   };
 
-  // Calcular el cambio en el semieje mayor (aproximación)
   const calcularDeltaSemiejeMayor = () => {
     const deltaV = calcularDeltaV();
     const G = 6.67430e-11;
@@ -58,20 +55,17 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
     const AU_in_m = 1.496e11;
     
     const a_m = asteroidData.semiMajorAxis * AU_in_m;
-    const n = Math.sqrt(G * M_sun / Math.pow(a_m, 3)); // Movimiento medio
+    const n = Math.sqrt(G * M_sun / Math.pow(a_m, 3));
     
-    // Cambio aproximado en el semieje mayor
     const deltaA = (2 * deltaV) / (n * a_m) * a_m;
-    return deltaA / AU_in_m; // Convertir a AU
+    return deltaA / AU_in_m;
   };
 
-  const aceleracion = calcularAceleracion();
-  const deltaV = calcularDeltaV();
   const deltaSemiejeMayor = calcularDeltaSemiejeMayor();
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Tractores Gravitacionales</h2>
+      <h2 className={styles.title}>Gravity Tractors</h2>
       
       <div className={styles.mainGrid}>
         <div className={styles.visualizationContainer}>
@@ -85,7 +79,7 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
                 w: asteroidData.argumentPerihelion,
                 M0: asteroidData.initialPhase
               }}
-              spacecraftParams={spacecraftParams} // Pasar parámetros de nave
+              spacecraftParams={spacecraftParams}
               onIntersectionsDetected={() => {}}
             />
           </div>
@@ -93,30 +87,29 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
           <div className={styles.legend}>
             <div className={styles.legendItem}>
               <div className={styles.legendLineEarth} />
-              <span>Tierra</span>
+              <span>Earth</span>
             </div>
             <div className={styles.legendItem}>
               <div className={styles.legendLineAsteroid} />
-              <span>Asteroide</span>
+              <span>Asteroid</span>
             </div>
             <div className={styles.legendItem}>
               <div className={styles.legendLineTractor} />
-              <span>Efecto Tractor</span>
+              <span>Tractor Effect</span>
             </div>
-            {/* Nueva leyenda para la órbita modificada */}
             <div className={styles.legendItem}>
               <div className={styles.legendLineModified} style={{ backgroundColor: '#29FF82' }} />
-              <span>Órbita Modificada</span>
+              <span>Modified Orbit</span>
             </div>
           </div>
         </div>
 
         <div className={styles.sidebar}>
           <div className={styles.panel}>
-            <h3 className={styles.panelTitle}>Efecto del Tractor Gravitacional</h3>
+            <h3 className={styles.panelTitle}>Gravity Tractor Effect</h3>
             <div className={styles.statusCard}>
               <div className={styles.statusTitle} style={{ backgroundColor: '#697aa8' }}>
-                Distancia entre órbitas
+                Distance Between Orbits
               </div>
               <div className={styles.statusDetail}>
                 {Math.abs(deltaSemiejeMayor).toExponential(2)} AU
@@ -130,16 +123,16 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
                 color: '#3C3C5A',
                 fontSize: '0.95em'
               }}>
-                Los cambios provocados por el tractor gravitacional son ligeros
+                The changes caused by the gravity tractor are slight
               </div>
             </div>
           </div>
 
           <div className={styles.panel}>
-            <h3 className={styles.panelTitle}>Parámetros de la Nave</h3>
+            <h3 className={styles.panelTitle}>Spacecraft Parameters</h3>
             <div className={styles.paramsList}>
               <RangeInput 
-                label="Masa de la nave"
+                label="Spacecraft Mass"
                 value={spacecraftParams.masaNave}
                 min={1000}
                 max={100000}
@@ -148,7 +141,7 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
                 onChange={(value) => handleParamChange('masaNave', value)}
               />
               <RangeInput 
-                label="Distancia de operación"
+                label="Operating Distance"
                 value={spacecraftParams.distanciaOperacion}
                 min={50}
                 max={1000}
@@ -157,18 +150,18 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
                 onChange={(value) => handleParamChange('distanciaOperacion', value)}
               />
               <RangeInput 
-                label="Tiempo de operación"
+                label="Operating Time"
                 value={spacecraftParams.tiempoOperacion}
                 min={1}
                 max={20}
                 step={0.5}
-                unit="años"
+                unit="years"
                 onChange={(value) => handleParamChange('tiempoOperacion', value)}
               />
               
               <div className={styles.paramItem}>
                 <div className={styles.paramHeader}>
-                  <span>Modo de operación:</span>
+                  <span>Operating Mode:</span>
                 </div>
                 <div className={styles.radioGroup}>
                   <label className={styles.radioLabel}>
@@ -195,37 +188,37 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
           </div>
 
           <div className={styles.panel}>
-            <h3 className={styles.panelTitle}>Datos del Asteroide</h3>
+            <h3 className={styles.panelTitle}>Asteroid Data</h3>
             <div className={styles.physicalData}>
               <div className={styles.dataRow}>
-                <span>Nombre:</span>
+                <span>Name:</span>
                 <span>{asteroidData.nombre}</span>
               </div>
               <div className={styles.dataRow}>
-                <span>Masa:</span>
+                <span>Mass:</span>
                 <span>{asteroidData.masa.toExponential(2)} kg</span>
               </div>
               <div className={styles.dataRow}>
-                <span>Radio:</span>
+                <span>Radius:</span>
                 <span>{asteroidData.radio.toFixed(2)} km</span>
               </div>
               <div className={styles.dataRow}>
-                <span>Densidad:</span>
+                <span>Density:</span>
                 <span>{asteroidData.densidad.toFixed(2)} g/cm³</span>
               </div>
               <div className={styles.dataRow}>
-                <span>Semieje mayor:</span>
+                <span>Semi-Major Axis:</span>
                 <span>{asteroidData.semiMajorAxis.toFixed(3)} AU</span>
               </div>
               <div className={styles.dataRow}>
-                <span>Excentricidad:</span>
+                <span>Eccentricity:</span>
                 <span>{asteroidData.eccentricity.toFixed(3)}</span>
               </div>
             </div>
           </div>
 
           <button className={styles.backButton} onClick={onBack}>
-            Volver al menú de mitigación
+            Return to Mitigation Menu
           </button>
         </div>
       </div>
@@ -233,7 +226,6 @@ const GravityTractor: React.FC<GravityTractorProps> = ({ asteroidData, onBack })
   );
 };
 
-// Componente RangeInput actualizado
 interface RangeInputProps {
   label: string;
   value: number;

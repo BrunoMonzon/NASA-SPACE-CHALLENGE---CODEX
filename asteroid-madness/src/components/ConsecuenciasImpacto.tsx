@@ -27,7 +27,7 @@ const ConsecuenciasImpacto: React.FC<ConsecuenciasImpactoProps> = ({
 }) => {
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Consecuencias del Impacto: {nombre}</h2>
+      <h2 className={styles.title}>Impact Consequences: {nombre}</h2>
       
       <div className={styles.mainContent}>
         <div className={styles.leftColumn}>
