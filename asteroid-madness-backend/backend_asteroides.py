@@ -9,6 +9,16 @@ import os
 
 app = Flask(__name__)
 
+
+# Allow CORS for development: ensure browser can read JSON responses from the frontend origin
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    return response
+
+
 # NASA API Key
 API_KEY = 'eH13yd2sijPWcdfRxxcZTNY1ureIwsOoY2pyGCOa'
 
@@ -36,7 +46,7 @@ def ejecutar_cpp(args):
     try:
         # Construct command
         cmd = [CPP_EXECUTABLE] + args
-        
+
         # Execute command
         result = subprocess.run(
             cmd,
@@ -45,14 +55,14 @@ def ejecutar_cpp(args):
             encoding='utf-8',
             timeout=60
         )
-        
+
         if result.returncode != 0:
             return {
                 'error': 'C++ executable returned error',
                 'stderr': result.stderr,
                 'stdout': result.stdout
             }, 500
-        
+
         # Parse JSON output
         try:
             return json.loads(result.stdout), 200
@@ -62,7 +72,7 @@ def ejecutar_cpp(args):
                 'output': result.stdout,
                 'parse_error': str(e)
             }, 500
-            
+
     except subprocess.TimeoutExpired:
         return {'error': 'C++ executable timed out'}, 504
     except FileNotFoundError:
@@ -74,15 +84,42 @@ def ejecutar_cpp(args):
         return {'error': f'Failed to execute C++: {str(e)}'}, 500
 
 
+@app.route('/impacto', methods=['GET'])
+def impacto_asteroide():
+    asteroide_id = request.args.get('id')
+    if not asteroide_id:
+        return jsonify({'error': 'Parameter "id" is required'}), 400
+
+    args = ['--asteroide-id', asteroide_id, '--calculos-extendidos']
+
+    result, status = ejecutar_cpp(args)
+    if status != 200:
+        return jsonify(result), status
+
+    impacto = result.get('calculo_orbital', {})
+    consecuencias = result.get('consecuencias_impacto', {})
+    zona = impacto.get('zona_aproximacion', {})
+
+    return jsonify({
+        'impacto_detectado': impacto.get('hay_impacto', False),
+        'distancia_minima_km': impacto.get('distancia_minima_km'),
+        'fecha_aproximacion': impacto.get('fecha_aproximacion'),
+        'zona_aproximacion': zona,
+        'energia_megatones': consecuencias.get('energia_cinetica_megatones'),
+        'crater': consecuencias.get('crater'),
+        'magnitud_sismica': consecuencias.get('magnitud_sismica_richter')
+    }), 200
+
+
 @app.route('/asteroide-cpp', methods=['GET'])
 def asteroide_cpp():
     """Simulate asteroid using C++ executable with asteroid ID."""
     asteroide_id = request.args.get('id')
     if not asteroide_id:
         return jsonify({'error': 'Parameter "id" is required'}), 400
-    
+
     args = ['--asteroide-id', asteroide_id]
-    
+
     # Optional parameters
     if request.args.get('diametro'):
         args.extend(['--diametro', request.args.get('diametro')])
@@ -92,7 +129,7 @@ def asteroide_cpp():
         args.append('--generar-resumen')
     if request.args.get('calculos_extendidos') == 'true':
         args.append('--calculos-extendidos')
-    
+
     result, status = ejecutar_cpp(args)
     return jsonify(result), status
 
@@ -103,12 +140,12 @@ def simular_cpp():
     data = request.get_json()
     if not data:
         return jsonify({'error': 'Request body required'}), 400
-    
+
     # Validate required orbital parameters
     required_params = ['a', 'e', 'i', 'omega', 'Omega', 'M']
     if not all(param in data for param in required_params):
         return jsonify({'error': 'Missing required orbital elements: a, e, i, omega, Omega, M'}), 400
-    
+
     # Build arguments for C++ executable
     args = [
         '--semieje-mayor', str(data['a']),
@@ -118,7 +155,7 @@ def simular_cpp():
         '--arg-perihelio', str(data['omega']),
         '--anomalia-media', str(data['M'])
     ]
-    
+
     # Optional parameters
     if 'diametro' in data:
         args.extend(['--diametro', str(data['diametro'])])
@@ -128,7 +165,7 @@ def simular_cpp():
         args.append('--generar-resumen')
     if data.get('calculos_extendidos'):
         args.append('--calculos-extendidos')
-    
+
     result, status = ejecutar_cpp(args)
     return jsonify(result), status
 
@@ -139,9 +176,9 @@ def gemini_query():
     data = request.get_json()
     if not data or 'consulta' not in data:
         return jsonify({'error': 'Request body must contain "consulta" field'}), 400
-    
+
     args = ['--consulta-gemini', data['consulta']]
-    
+
     result, status = ejecutar_cpp(args)
     return jsonify(result), status
 
@@ -164,14 +201,14 @@ def update_cpp_config():
     data = request.get_json()
     if not data or 'path' not in data:
         return jsonify({'error': 'Request body must contain "path" field'}), 400
-    
+
     new_path = data['path']
     if not os.path.isfile(new_path):
         return jsonify({
             'error': 'File not found',
             'path': new_path
         }), 404
-    
+
     CPP_EXECUTABLE = new_path
     return jsonify({
         'message': 'C++ executable path updated',

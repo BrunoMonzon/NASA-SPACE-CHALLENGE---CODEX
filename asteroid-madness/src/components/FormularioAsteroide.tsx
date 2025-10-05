@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import styles from './FormularioAsteroide.module.css';
 
+// Backend base URL (configure with VITE_BACKEND_URL). If not set, fallback to localhost:5000
+const BACKEND_URL = (import.meta as any)?.env?.VITE_BACKEND_URL || 'http://localhost:5000';
+
 type TabType = 'Seleccionar' | 'Configurar';
 
 interface AsteroidData {
@@ -42,7 +45,6 @@ interface FormularioAsteroideProps {
 
 const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   const [selectedTab, setSelectedTab] = useState<TabType>('Seleccionar');
-  const [searchQuery, setSearchQuery] = useState('');
   const [popup, setPopup] = useState<PopupInfo>({ show: false, content: '', x: 0, y: 0 });
   const [isLoading, setIsLoading] = useState(false);
   
@@ -98,6 +100,8 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
       alert('Error al buscar el asteroide. Verifica el nombre o la conexión con el servidor.');
     }
   };
+
+  
 
   const handleInputChange = (field: keyof AsteroidData, value: string) => {
     setFormData(prev => ({
@@ -168,20 +172,75 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
       <div className={styles.content}>
         {selectedTab === 'Seleccionar' ? (
           <div className={styles.searchContainer}>
-            <input
-              type="text"
-              className={styles.searchBar}
-              placeholder="Buscar por nombre..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <img
-              src="/material-symbols-light_search-rounded.svg"
-              alt="Buscar"
-              className={styles.searchIcon}
-              onClick={handleSearch}
-            />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label className={styles.label}>Fecha inicio</label>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label className={styles.label}>Fecha fin</label>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <button className={styles.simulateButton} onClick={async () => { await fetchAsteroids(); }}>
+                  Listar
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              {loading && <div>Cargando asteroides...</div>}
+              {error && <div style={{ color: 'var(--danger, #ff6b6b)' }}>{error}</div>}
+              {!loading && asteroids.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label className={styles.label}>Seleccione asteroide</label>
+                  <select className={styles.input} value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
+                    <option value="">-- Seleccionar --</option>
+                    {asteroids.map(a => (
+                      <option key={a.id} value={a.id}>{a.name} (a={a.a.toFixed(3)} AU)</option>
+                    ))}
+                  </select>
+                  <div>
+                    <button
+                      className={styles.simulateButton}
+                      onClick={() => {
+                        const ast = asteroids.find(x => x.id === selectedId);
+                        if (ast) {
+                          // Map backend asteroid to FormularioAsteroide AsteroidData and simulate
+                          const mapped = {
+                            nombre: ast.name,
+                            semiMajorAxis: ast.a,
+                            eccentricity: ast.e,
+                            inclination: (ast.i || 0) * 180 / Math.PI,
+                            longitudeAscending: (ast.Omega || 0) * 180 / Math.PI,
+                            argumentPerihelion: (ast.omega || 0) * 180 / Math.PI,
+                            initialPhase: (ast.M || 0) * 180 / Math.PI,
+                            masa: ast.masa || 0,
+                            radio: ast.radio || 0,
+                            densidad: ast.densidad || 0
+                          };
+                          onSimulate(mapped);
+                        }
+                      }}
+                      disabled={!selectedId}
+                    >
+                      Simular
+                    </button>
+                  </div>
+                </div>
+              )}
+              {!loading && asteroids.length === 0 && <div style={{ marginTop: 8 }}>No se han listado asteroides aún.</div>}
+            </div>
           </div>
         ) : (
           <div className={styles.formContainer}>

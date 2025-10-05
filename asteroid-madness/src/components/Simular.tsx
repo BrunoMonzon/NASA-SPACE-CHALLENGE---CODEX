@@ -152,7 +152,7 @@ function Simular() {
       )}
       
       {currentView === 'kinetic' && (
-        <KineticImpactador onBack={handleBackToMitigation} />
+        <KineticImpactador onBack={handleBackToMitigation} asteroidData={asteroidData} />
       )}
       
       {currentView === 'gravity' && asteroidData && (
