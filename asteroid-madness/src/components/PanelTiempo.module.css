@@ -1,0 +1,69 @@
+.container {
+  background-color: rgba(204, 231, 248, 0.6);
+  border: 0.7px solid white;
+  border-radius: 5px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Poppins', sans-serif;
+  /* Eliminamos márgenes problemáticos */
+  max-width: 300px; /* Limitar ancho máximo para que no se corte */
+}
+
+.title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3C3C5A;
+  margin: 5px 0 20px 0;
+}
+
+.dateContainer {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.dateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3C3C5A;
+}
+
+.valueBox {
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 0.7px solid white;
+  border-radius: 4px;
+  padding: 8px 16px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.value {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.message {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 240;
+  font-style: italic;
+  color: #3C3C5A;
+  text-align: center;
+  max-width: 350px;
+  margin: 0;
+  line-height: 1.4;
+}

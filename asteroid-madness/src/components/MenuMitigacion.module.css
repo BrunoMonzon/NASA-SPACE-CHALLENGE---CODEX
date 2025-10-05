@@ -1,0 +1,92 @@
+.container {
+  width: 1225px;
+  height: 610px;
+  background-color: rgba(59, 108, 157, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  opacity: 0.85;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 50px;
+  padding: 40px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 450;
+  font-size: 20px;
+  color: white;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.buttonGrid {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.mitigationButton {
+  width: 330px;
+  height: 440px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 0.8px solid white;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 20px;
+}
+
+.mitigationButton:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: translateY(-5px);
+}
+
+.buttonContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.buttonImage {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+}
+
+.buttonTitle {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+  color: white;
+  text-align: center;
+}
+
+.backButton {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.backButton:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
