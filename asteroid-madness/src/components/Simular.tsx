@@ -1,5 +1,11 @@
 import { useState } from 'react';
 import FormularioAsteroide from "./FormularioAsteroide";
+import ImpactDay from "./ImpactDay";
+import ConsecuenciasImpacto from "./ConsecuenciasImpacto";
+import MenuMitigacion from "./MenuMitigacion";
+import KineticImpactador from "./KineticImpactador";
+import GravityTractor from "./GravityTractor";
+import LaserAblation from "./LaserAblation";
 import VisualizacionAsteroide from "./VisualizacionAsteroide"; // Nuevo import
 
 interface AsteroidData {
@@ -15,29 +21,96 @@ interface AsteroidData {
   densidad: number;
 }
 
+type ViewState = 'form' | 'impactDay' | 'consequences' | 'mitigation' | 'kinetic' | 'gravity' | 'laser';
+
 function Simular() {
   const [asteroidData, setAsteroidData] = useState<AsteroidData | null>(null);
-  const [showVisualization, setShowVisualization] = useState(false);
+  const [currentView, setCurrentView] = useState<ViewState>('form');
 
   const handleSimulateData = (data: AsteroidData) => {
     setAsteroidData(data);
-    setShowVisualization(true);
+    setCurrentView('impactDay');
+  };
+
+  const handleShowConsequences = () => {
+    setCurrentView('consequences');
+  };
+
+  const handleBackToImpactDay = () => {
+    setCurrentView('impactDay');
+  };
+
+  const handleShowMitigation = () => {
+    setCurrentView('mitigation');
+  };
+
+  const handleBackToConsequences = () => {
+    setCurrentView('consequences');
+  };
+
+  const handleSelectKinetic = () => {
+    setCurrentView('kinetic');
+  };
+
+  const handleSelectGravity = () => {
+    setCurrentView('gravity');
+  };
+
+  const handleSelectLaser = () => {
+    setCurrentView('laser');
+  };
+
+  const handleBackToMitigation = () => {
+    setCurrentView('mitigation');
   };
 
   return (
     <section>
-      {!showVisualization ? (
+      {currentView === 'form' && (
         <FormularioAsteroide onSimulate={handleSimulateData} />
-      ) : (
-        asteroidData && (
-          <VisualizacionAsteroide
-            asteroidData={asteroidData}
-            onBack={() => {
-              setShowVisualization(false);
-              setAsteroidData(null);
-            }}
-          />
-        )
+      )}
+      {currentView === 'impactDay' && asteroidData && (
+        <ImpactDay
+          nombre={asteroidData.nombre}
+          semiMajorAxis={asteroidData.semiMajorAxis}
+          eccentricity={asteroidData.eccentricity}
+          inclination={asteroidData.inclination}
+          longitudeAscending={asteroidData.longitudeAscending}
+          argumentPerihelion={asteroidData.argumentPerihelion}
+          initialPhase={asteroidData.initialPhase}
+          masa={asteroidData.masa}
+          radio={asteroidData.radio}
+          densidad={asteroidData.densidad}
+          onShowConsequences={handleShowConsequences}
+        />
+      )}
+      {currentView === 'consequences' && asteroidData && (
+        <ConsecuenciasImpacto
+          nombre={asteroidData.nombre}
+          masa={asteroidData.masa}
+          radio={asteroidData.radio}
+          densidad={asteroidData.densidad}
+          coordenada={[-55.183219, -16.653422]}
+          onBack={handleBackToImpactDay}
+          onShowMitigation={handleShowMitigation}
+        />
+      )}
+      {currentView === 'mitigation' && (
+        <MenuMitigacion 
+          onBack={handleBackToConsequences}
+          onSelectKinetic={handleSelectKinetic}
+          onSelectGravity={handleSelectGravity}
+          onSelectLaser={handleSelectLaser}
+        />
+      )}
+      {currentView === 'kinetic' && (
+        <KineticImpactador onBack={handleBackToMitigation} />
+      )}
+      {currentView === 'gravity' && (
+        <GravityTractor onBack={handleBackToMitigation} />
+      )}
+      {currentView === 'laser' && (
+        <LaserAblation onBack={handleBackToMitigation} />
       )}
     </section>
   );

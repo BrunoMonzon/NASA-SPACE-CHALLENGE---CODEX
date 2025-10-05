@@ -1,0 +1,42 @@
+.legendContainer {
+  width: 784px;
+  height: 63px;
+  background-color: rgba(204, 231, 248, 0.6);
+  border: 1px solid white;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  margin-left: 10px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.earthIcon {
+  width: 24px;
+  height: 24px;
+  background-color: #CCE7F8;
+  filter: drop-shadow(0 0 12px rgba(204, 231, 248, 0.8));
+  border-radius: 2px;
+}
+
+.asteroidIcon {
+  width: 24px;
+  height: 24px;
+  background-color: #262E37;
+  filter: drop-shadow(0 0 12px rgba(38, 46, 55, 0.8));
+  border-radius: 2px;
+}
+
+.legendText {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #000;
+}

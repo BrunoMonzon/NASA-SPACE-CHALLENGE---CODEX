@@ -291,7 +291,14 @@ const OrbitCrash: React.FC<{
   const intersections = useMemo(() => detectIntersections(earthPoints, asteroidPoints), [earthPoints, asteroidPoints]);
   
   return (
-    <div style={{ width: '814px', height: '516px', marginTop: '50px', marginLeft: '15px' }}>
+    <div style={{
+    width: '814px',
+    height: '450px',
+    marginTop: '-10px',
+    marginLeft: '10px',
+    border: '1px solid white',
+    borderRadius: '10px'
+  }}>
       <Canvas
         camera={{ position: [0, 15, 20], fov: 50 }}
         gl={{ antialias: true, alpha: false }}
