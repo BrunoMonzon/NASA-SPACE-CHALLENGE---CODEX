@@ -12,7 +12,7 @@ interface ConsecuenciasImpactoProps {
   densidad?: number;
   velocidad?: number;
   onBack: () => void;
-  onShowMitigation: () => void; // Nueva prop
+  onShowMitigation: () => void;
 }
 
 const ConsecuenciasImpacto: React.FC<ConsecuenciasImpactoProps> = ({
@@ -46,8 +46,9 @@ const ConsecuenciasImpacto: React.FC<ConsecuenciasImpactoProps> = ({
               radio={radio}
               densidad={densidad}
               velocidad={velocidad}
+              coordenada={coordenada}
               onBack={onBack}
-              onShowMitigation={onShowMitigation} // Pasamos la nueva prop
+              onShowMitigation={onShowMitigation}
             />
           </div>
         </div>

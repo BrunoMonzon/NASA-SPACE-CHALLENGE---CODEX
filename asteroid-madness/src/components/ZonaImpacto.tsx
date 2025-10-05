@@ -4,12 +4,17 @@ import Mapa from './Mapa';
 
 interface ZonaImpactoProps {
   coordenada: [number, number];
-  onShowConsequences: () => void; // Nueva prop
+  onShowConsequences: () => void;
+  onBack: () => void; // Nueva prop para volver atrás
 }
 
-const ZonaImpacto: React.FC<ZonaImpactoProps> = ({ coordenada, onShowConsequences }) => {
+const ZonaImpacto: React.FC<ZonaImpactoProps> = ({ coordenada, onShowConsequences, onBack }) => {
   const handleVerConsecuencias = () => {
-    onShowConsequences(); // Llamamos a la función en lugar del console.log
+    onShowConsequences();
+  };
+
+  const handleVolver = () => {
+    onBack(); // Llamamos a la función para volver
   };
 
   return (
@@ -23,6 +28,13 @@ const ZonaImpacto: React.FC<ZonaImpactoProps> = ({ coordenada, onShowConsequence
         onClick={handleVerConsecuencias}
       >
         Ver consecuencias de impacto
+      </button>
+      {/* Nuevo botón para volver */}
+      <button 
+        className={styles.backButton}
+        onClick={handleVolver}
+      >
+        ← Volver a Visualización
       </button>
     </div>
   );

@@ -19,6 +19,19 @@ interface AsteroidData {
   densidad: number;
 }
 
+interface ImpactData {
+  impact: boolean;
+  date?: {
+    day: number;
+    month: number;
+    year: number;
+  };
+  latitude?: number;
+  longitude?: number;
+  distance_km?: number;
+  closest_approach_km?: number;
+}
+
 interface PopupInfo {
   show: boolean;
   content: string;
@@ -27,12 +40,13 @@ interface PopupInfo {
 }
 
 interface FormularioAsteroideProps {
-  onSimulate: (data: AsteroidData) => void;
+  onSimulate: (asteroidData: AsteroidData, impactData: ImpactData) => void;
 }
 
 const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   const [selectedTab, setSelectedTab] = useState<TabType>('Seleccionar');
   const [popup, setPopup] = useState<PopupInfo>({ show: false, content: '', x: 0, y: 0 });
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState<AsteroidData>({
     nombre: '',
@@ -47,50 +61,43 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
     densidad: 0
   });
 
-  // Selection tab state: date range and asteroid list from backend
-  const today = new Date();
-  const defaultStart = new Date(today.getTime() - 7 * 24 * 3600 * 1000).toISOString().slice(0, 10);
-  const defaultEnd = today.toISOString().slice(0, 10);
-  const [startDate, setStartDate] = useState<string>(defaultStart);
-  const [endDate, setEndDate] = useState<string>(defaultEnd);
-  const [asteroids, setAsteroids] = useState<Array<any>>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [selectedId, setSelectedId] = useState<string>('');
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
 
-  const fetchAsteroids = async () => {
-    setLoading(true);
-    setError('');
-    setAsteroids([]);
-    setSelectedId('');
     try {
-      const url = `${BACKEND_URL}/asteroides?start_date=${startDate}&end_date=${endDate}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const response = await fetch('http://localhost:5000/asteroid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: searchQuery }),
+      });
 
-      // Guardar el content-type para evitar intentar parsear HTML (p.ej. index.html) como JSON
-      const contentType = (res.headers.get('content-type') || '').toLowerCase();
-      if (!contentType.includes('application/json')) {
-        const text = await res.text();
-        // If we got HTML (starts with <!doctype or <), show a helpful error message
-        const snippet = text.slice(0, 300).replace(/\n/g, ' ');
-        throw new Error(`Respuesta no JSON desde backend (${url}): ${snippet}`);
+      if (!response.ok) {
+        throw new Error('Asteroide no encontrado o error en el servidor');
       }
 
-      const data = await res.json();
-      setAsteroids(data.asteroids || []);
-    } catch (e: any) {
-      // Provide clearer messages for HTML/non-JSON responses or connection refused
-      const msg = e?.message || String(e);
-      if (msg.includes('<!doctype') || msg.includes('<html')) {
-        setError('Respuesta inesperada (HTML) al consultar el backend. ¿Está corriendo el servicio en http://localhost:5000 ?');
-      } else if (msg.includes('ECONNREFUSED') || msg.includes('Failed to fetch')) {
-        setError('No se puede conectar al backend. Inicia el servidor Python (backend) y/o configura VITE_BACKEND_URL.');
-      } else {
-        setError(msg);
-      }
-    } finally {
-      setLoading(false);
+      const data = await response.json();
+      console.log('Resultado:', data);
+
+      setFormData({
+        nombre: data.full_name || '',
+        semiMajorAxis: data.a || 0,
+        eccentricity: data.e || 0,
+        inclination: data.i || 0,
+        longitudeAscending: data['Ω (node)'] || 0,
+        argumentPerihelion: data['ω (peri)'] || 0,
+        initialPhase: data['M₀'] || 0,
+        masa: data['masa (kg)'] || 0,
+        radio: data['radio (km)'] || 0,
+        densidad: data['densidad (kg/m³)'] || 0
+      });
+
+      setSelectedTab('Configurar');
+
+    } catch (error) {
+      console.error('Error al buscar asteroide:', error);
+      alert('Error al buscar el asteroide. Verifica el nombre o la conexión con el servidor.');
     }
   };
 
@@ -104,9 +111,12 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   };
 
   const handleSimulate = () => {
-    // Enviar datos al componente padre (Simular.tsx)
-    onSimulate(formData);
-    console.log('Simulando con datos:', formData);
+    // Solo enviar datos del asteroide al padre, sin llamar a /impact aún
+    const emptyImpactData: ImpactData = {
+      impact: false
+    };
+    
+    onSimulate(formData, emptyImpactData);
   };
 
   const showPopup = (content: string, e: React.MouseEvent) => {
@@ -426,8 +436,12 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
               </div>
             </div>
 
-            <button className={styles.simulateButton} onClick={handleSimulate}>
-              Simular
+            <button 
+              className={styles.simulateButton} 
+              onClick={handleSimulate}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Simulando...' : 'Simular'}
             </button>
           </div>
         )}

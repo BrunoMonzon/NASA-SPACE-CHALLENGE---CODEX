@@ -4,9 +4,10 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface MapaProps {
   coordenada?: [number, number];
+  onCoordinateChange?: (coord: [number, number]) => void;
 }
 
-const Mapa = ({ coordenada = [-68.1193, -16.5000] }: MapaProps) => {
+const Mapa = ({ coordenada = [-68.1193, -16.5000], onCoordinateChange }: MapaProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const marker = useRef<maplibregl.Marker | null>(null);
@@ -213,6 +214,10 @@ const Mapa = ({ coordenada = [-68.1193, -16.5000] }: MapaProps) => {
         const newCoord: [number, number] = [lngLat.lng, lngLat.lat];
         setCurrentCoord(newCoord);
         actualizarZonaPeligro(lngLat.lng, lngLat.lat);
+        // Llamar a la función callback si existe
+        if (onCoordinateChange) {
+          onCoordinateChange(newCoord);
+        }
       });
 
       // Agregar popup informativo
@@ -278,68 +283,68 @@ const Mapa = ({ coordenada = [-68.1193, -16.5000] }: MapaProps) => {
   }, []);
 
   return (
-  <div style={{ 
-    width: '100%', 
-    height: '100%', 
-    position: 'relative',
-    minHeight: '200px' // Altura mínima
-  }}>
-    <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
-    <div style={{
-      position: 'absolute',
-      top: '5px',
-      left: '5px',
-      background: 'white',
-      padding: '8px',
-      borderRadius: '4px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-      fontSize: '12px',
-      maxWidth: '150px', // Limita el ancho del overlay
-      zIndex: 1
+    <div style={{ 
+      width: '100%', 
+      height: '100%', 
+      position: 'relative',
+      minHeight: '200px' // Altura mínima
     }}>
-      <strong>🗺️ Zona de Peligro</strong>
-      <div style={{ 
-        marginTop: '6px', 
-        fontSize: '10px', 
-        color: '#666', 
-        borderTop: '1px solid #eee', 
-        paddingTop: '6px' 
+      <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
+      <div style={{
+        position: 'absolute',
+        top: '5px',
+        left: '5px',
+        background: 'white',
+        padding: '8px',
+        borderRadius: '4px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+        fontSize: '12px',
+        maxWidth: '150px', // Limita el ancho del overlay
+        zIndex: 1
       }}>
-        <strong>📍 Coordenadas:</strong>
+        <strong>🗺️ Zona de Peligro</strong>
         <div style={{ 
-          fontFamily: 'monospace', 
-          marginTop: '2px',
-          fontSize: '9px'
+          marginTop: '6px', 
+          fontSize: '10px', 
+          color: '#666', 
+          borderTop: '1px solid #eee', 
+          paddingTop: '6px' 
         }}>
-          Lat: {currentCoord[1].toFixed(4)}°<br/>
-          Lng: {currentCoord[0].toFixed(4)}°
-        </div>
-      </div>
-      <div style={{ marginTop: '6px', fontSize: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginTop: '2px' }}>
+          <strong>📍 Coordenadas:</strong>
           <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            background: 'rgba(255,0,0,0.45)', 
-            marginRight: '4px', 
-            border: '1px solid #cc0000' 
-          }}></div>
-          Alta intensidad
+            fontFamily: 'monospace', 
+            marginTop: '2px',
+            fontSize: '9px'
+          }}>
+            Lat: {currentCoord[1].toFixed(4)}°<br/>
+            Lng: {currentCoord[0].toFixed(4)}°
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', marginTop: '2px' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            background: 'rgba(255,107,0,0.25)', 
-            marginRight: '4px', 
-            border: '1px solid #cc0000' 
-          }}></div>
-          Baja intensidad
+        <div style={{ marginTop: '6px', fontSize: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: '2px' }}>
+            <div style={{ 
+              width: '12px', 
+              height: '12px', 
+              background: 'rgba(255,0,0,0.45)', 
+              marginRight: '4px', 
+              border: '1px solid #cc0000' 
+            }}></div>
+            Alta intensidad
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: '2px' }}>
+            <div style={{ 
+              width: '12px', 
+              height: '12px', 
+              background: 'rgba(255,107,0,0.25)', 
+              marginRight: '4px', 
+              border: '1px solid #cc0000' 
+            }}></div>
+            Baja intensidad
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default Mapa;

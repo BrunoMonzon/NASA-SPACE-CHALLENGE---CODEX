@@ -32,6 +32,19 @@ interface AsteroidElements {
   M0: number;
 }
 
+interface SpacecraftParams {
+  masaNave: number;
+  distanciaOperacion: number;
+  tiempoOperacion: number;
+  modoOperacion: 'hovering' | 'orbiting';
+}
+
+interface OrbitCrashProps {
+  asteroidElements?: AsteroidElements;
+  spacecraftParams?: SpacecraftParams;
+  onIntersectionsDetected?: (hasIntersections: boolean) => void;
+}
+
 function solveKepler(M: number, e: number, tolerance = 1e-6): number {
   const deg2rad = Math.PI / 180;
   const M_rad = M * deg2rad;
@@ -130,9 +143,88 @@ function calculateAsteroidPosition(elements: AsteroidElements, T: number): THREE
   return new THREE.Vector3(xEcl, zEcl, yEcl);
 }
 
+// Función para calcular la aceleración del tractor gravitacional
+function calculateGravityTractorAcceleration(spacecraftParams: SpacecraftParams): number {
+  const G = 6.67430e-11;
+  return G * spacecraftParams.masaNave / Math.pow(spacecraftParams.distanciaOperacion, 2);
+}
+
+// Función para calcular el cambio en el semieje mayor debido al deltaV
+function calculateDeltaSemiMajorAxis(elements: AsteroidElements, deltaV: number): number {
+  const G = 6.67430e-11;
+  const M_sun = 1.989e30;
+  const AU_in_m = 1.496e11;
+  
+  // Convertir semieje mayor de AU a metros
+  const a_m = elements.a * AU_in_m;
+  
+  // Velocidad orbital media
+  const n = Math.sqrt(G * M_sun / Math.pow(a_m, 3));
+  
+  // Cambio en el semieje mayor (simplificación para órbitas cercanas a circulares)
+  const deltaA = (2 * deltaV) / (n * a_m) * a_m;
+  
+  // Convertir de vuelta a AU
+  return deltaA / AU_in_m;
+}
+
+// Función para calcular la nueva posición del asteroide con el efecto del tractor
+function calculateModifiedAsteroidPosition(
+  elements: AsteroidElements, 
+  T: number, 
+  spacecraftParams: SpacecraftParams
+): THREE.Vector3 {
+  const deg2rad = Math.PI / 180;
+  const epoch = J2000;
+  const n = 0.9856076686 / Math.pow(elements.a, 1.5);
+  const daysSinceEpoch = T - epoch;
+  
+  // Aplicar el efecto del tractor gravitacional
+  const a_GT = calculateGravityTractorAcceleration(spacecraftParams);
+  const segundosPorAnio = 365.25 * 24 * 3600;
+  const deltaV = a_GT * spacecraftParams.tiempoOperacion * segundosPorAnio;
+  
+  // Calcular nuevo semieje mayor
+  const deltaA = calculateDeltaSemiMajorAxis(elements, deltaV);
+  const newElements = {
+    ...elements,
+    a: elements.a + deltaA
+  };
+  
+  // Calcular posición con nuevos elementos
+  let M = newElements.M0 + n * daysSinceEpoch;
+  M = ((M + 180) % 360) - 180;
+  
+  const E = solveKepler(M, newElements.e);
+  const E_rad = E * deg2rad;
+  
+  const xPrime = newElements.a * (Math.cos(E_rad) - newElements.e);
+  const yPrime = newElements.a * Math.sqrt(1 - newElements.e * newElements.e) * Math.sin(E_rad);
+  
+  const omega_rad = newElements.w * deg2rad;
+  const I_rad = newElements.i * deg2rad;
+  const O_rad = newElements.O * deg2rad;
+  
+  const cosO = Math.cos(O_rad);
+  const sinO = Math.sin(O_rad);
+  const cosI = Math.cos(I_rad);
+  const sinI = Math.sin(I_rad);
+  const cosW = Math.cos(omega_rad);
+  const sinW = Math.sin(omega_rad);
+  
+  const xEcl = (cosW * cosO - sinW * sinO * cosI) * xPrime +
+               (-sinW * cosO - cosW * sinO * cosI) * yPrime;
+  const yEcl = (cosW * sinO + sinW * cosO * cosI) * xPrime +
+               (-sinW * sinO + cosW * cosO * cosI) * yPrime;
+  const zEcl = (sinW * sinI) * xPrime + (cosW * sinI) * yPrime;
+  
+  return new THREE.Vector3(xEcl, zEcl, yEcl);
+}
+
 function generateOrbitPoints(
-  type: 'earth' | 'asteroid',
+  type: 'earth' | 'asteroid' | 'modifiedAsteroid',
   elements?: AsteroidElements,
+  spacecraftParams?: SpacecraftParams,
   numPoints = 360
 ): THREE.Vector3[] {
   const points: THREE.Vector3[] = [];
@@ -153,6 +245,14 @@ function generateOrbitPoints(
       const dayOffset = (i / numPoints) * period;
       const julianDate = currentJD + dayOffset;
       const pos = calculateAsteroidPosition(elements, julianDate);
+      points.push(pos.multiplyScalar(AU_SCALE));
+    }
+  } else if (type === 'modifiedAsteroid' && elements && spacecraftParams) {
+    const period = 365.25 * Math.pow(elements.a, 1.5);
+    for (let i = 0; i <= numPoints; i++) {
+      const dayOffset = (i / numPoints) * period;
+      const julianDate = currentJD + dayOffset;
+      const pos = calculateModifiedAsteroidPosition(elements, julianDate, spacecraftParams);
       points.push(pos.multiplyScalar(AU_SCALE));
     }
   }
@@ -274,9 +374,7 @@ const IntersectionMarkers: React.FC<{
   );
 };
 
-const OrbitCrash: React.FC<{
-  asteroidElements?: AsteroidElements;
-}> = ({
+const OrbitCrash: React.FC<OrbitCrashProps> = ({
   asteroidElements = {
     a: 1.458,
     e: 0.2228,
@@ -284,21 +382,39 @@ const OrbitCrash: React.FC<{
     O: 304.27,
     w: 178.93,
     M0: 310.55
-  }
+  },
+  spacecraftParams,
+  onIntersectionsDetected
 }) => {
   const earthPoints = useMemo(() => generateOrbitPoints('earth'), []);
-  const asteroidPoints = useMemo(() => generateOrbitPoints('asteroid', asteroidElements), [asteroidElements]);
-  const intersections = useMemo(() => detectIntersections(earthPoints, asteroidPoints), [earthPoints, asteroidPoints]);
+  const asteroidPoints = useMemo(() => 
+    generateOrbitPoints('asteroid', asteroidElements), [asteroidElements]);
+  
+  // Puntos para la órbita modificada - solo se generan si hay parámetros de nave
+  const modifiedAsteroidPoints = useMemo(() => {
+    if (spacecraftParams) {
+      return generateOrbitPoints('modifiedAsteroid', asteroidElements, spacecraftParams);
+    }
+    return [];
+  }, [asteroidElements, spacecraftParams]);
+  
+  const intersections = useMemo(() => {
+    const detected = detectIntersections(earthPoints, asteroidPoints);
+    if (onIntersectionsDetected) {
+      onIntersectionsDetected(detected.length > 0);
+    }
+    return detected;
+  }, [earthPoints, asteroidPoints, onIntersectionsDetected]);
   
   return (
     <div style={{
-    width: '814px',
-    height: '450px',
-    marginTop: '-10px',
-    marginLeft: '10px',
-    border: '1px solid white',
-    borderRadius: '10px'
-  }}>
+      width: '814px',
+      height: '450px',
+      marginTop: '-10px',
+      marginLeft: '10px',
+      border: '1px solid white',
+      borderRadius: '10px'
+    }}>
       <Canvas
         camera={{ position: [0, 15, 20], fov: 50 }}
         gl={{ antialias: true, alpha: false }}
@@ -319,6 +435,12 @@ const OrbitCrash: React.FC<{
         
         <OrbitLine points={earthPoints} color="#CCE7F8" opacity={0.8} />
         <OrbitLine points={asteroidPoints} color="#262E37" opacity={0.8} />
+        
+        {/* Nueva órbita modificada por el tractor gravitacional */}
+        {modifiedAsteroidPoints.length > 0 && (
+          <OrbitLine points={modifiedAsteroidPoints} color="#29FF82" opacity={0.8} />
+        )}
+        
         <IntersectionMarkers intersections={intersections} />
         
         <Stars radius={100} depth={50} count={3000} factor={4} saturation={0} fade />
