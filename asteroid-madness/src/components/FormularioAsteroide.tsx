@@ -16,6 +16,19 @@ interface AsteroidData {
   densidad: number;
 }
 
+interface ImpactData {
+  impact: boolean;
+  date?: {
+    day: number;
+    month: number;
+    year: number;
+  };
+  latitude?: number;
+  longitude?: number;
+  distance_km?: number;
+  closest_approach_km?: number;
+}
+
 interface PopupInfo {
   show: boolean;
   content: string;
@@ -24,13 +37,14 @@ interface PopupInfo {
 }
 
 interface FormularioAsteroideProps {
-  onSimulate: (data: AsteroidData) => void;
+  onSimulate: (asteroidData: AsteroidData, impactData: ImpactData) => void;
 }
 
 const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   const [selectedTab, setSelectedTab] = useState<TabType>('Seleccionar');
   const [searchQuery, setSearchQuery] = useState('');
   const [popup, setPopup] = useState<PopupInfo>({ show: false, content: '', x: 0, y: 0 });
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState<AsteroidData>({
     nombre: '',
@@ -45,9 +59,44 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
     densidad: 0
   });
 
-  const handleSearch = () => {
-    // TODO: Conectar con API real
-    console.log('Buscando asteroide:', searchQuery);
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    try {
+      const response = await fetch('http://localhost:5000/asteroid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: searchQuery }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Asteroide no encontrado o error en el servidor');
+      }
+
+      const data = await response.json();
+      console.log('Resultado:', data);
+
+      setFormData({
+        nombre: data.full_name || '',
+        semiMajorAxis: data.a || 0,
+        eccentricity: data.e || 0,
+        inclination: data.i || 0,
+        longitudeAscending: data['Ω (node)'] || 0,
+        argumentPerihelion: data['ω (peri)'] || 0,
+        initialPhase: data['M₀'] || 0,
+        masa: data['masa (kg)'] || 0,
+        radio: data['radio (km)'] || 0,
+        densidad: data['densidad (kg/m³)'] || 0
+      });
+
+      setSelectedTab('Configurar');
+
+    } catch (error) {
+      console.error('Error al buscar asteroide:', error);
+      alert('Error al buscar el asteroide. Verifica el nombre o la conexión con el servidor.');
+    }
   };
 
   const handleInputChange = (field: keyof AsteroidData, value: string) => {
@@ -58,9 +107,12 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   };
 
   const handleSimulate = () => {
-    // Enviar datos al componente padre (Simular.tsx)
-    onSimulate(formData);
-    console.log('Simulando con datos:', formData);
+    // Solo enviar datos del asteroide al padre, sin llamar a /impact aún
+    const emptyImpactData: ImpactData = {
+      impact: false
+    };
+    
+    onSimulate(formData, emptyImpactData);
   };
 
   const showPopup = (content: string, e: React.MouseEvent) => {
@@ -325,8 +377,12 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
               </div>
             </div>
 
-            <button className={styles.simulateButton} onClick={handleSimulate}>
-              Simular
+            <button 
+              className={styles.simulateButton} 
+              onClick={handleSimulate}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Simulando...' : 'Simular'}
             </button>
           </div>
         )}
