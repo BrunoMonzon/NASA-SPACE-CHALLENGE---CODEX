@@ -6,7 +6,6 @@ import MenuMitigacion from "./MenuMitigacion";
 import KineticImpactador from "./KineticImpactador";
 import GravityTractor from "./GravityTractor";
 import LaserAblation from "./LaserAblation";
-import VisualizacionAsteroide from "./VisualizacionAsteroide"; // Nuevo import
 
 interface AsteroidData {
   nombre: string;
@@ -104,7 +103,7 @@ function Simular() {
         />
       )}
       {currentView === 'kinetic' && (
-        <KineticImpactador onBack={handleBackToMitigation} />
+        <KineticImpactador onBack={handleBackToMitigation} asteroidData={asteroidData} />
       )}
       {currentView === 'gravity' && (
         <GravityTractor onBack={handleBackToMitigation} />
