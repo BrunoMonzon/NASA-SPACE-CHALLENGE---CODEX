@@ -21,7 +21,7 @@ interface VisualizacionAsteroideProps {
 }
 
 const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({ asteroidData, onBack }) => {
-  const [showSimulation, setShowSimulation] = useState(true); // Siempre true al cargar
+  const [showSimulation, _setShowSimulation] = useState(true); // Siempre true al cargar
 
   const calculateMOID = () => {
     // Cálculo aproximado del MOID (Minimum Orbit Intersection Distance)
