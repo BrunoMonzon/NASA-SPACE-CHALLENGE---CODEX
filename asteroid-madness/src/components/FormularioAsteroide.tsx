@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import styles from './FormularioAsteroide.module.css';
 
+// Backend base URL (configure with VITE_BACKEND_URL). If not set, fallback to localhost:5000
+const BACKEND_URL = (import.meta as any)?.env?.VITE_BACKEND_URL || 'http://localhost:5000';
+
 type TabType = 'Seleccionar' | 'Configurar';
 
 interface AsteroidData {
@@ -29,7 +32,6 @@ interface FormularioAsteroideProps {
 
 const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   const [selectedTab, setSelectedTab] = useState<TabType>('Seleccionar');
-  const [searchQuery, setSearchQuery] = useState('');
   const [popup, setPopup] = useState<PopupInfo>({ show: false, content: '', x: 0, y: 0 });
   
   const [formData, setFormData] = useState<AsteroidData>({
@@ -45,10 +47,54 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
     densidad: 0
   });
 
-  const handleSearch = () => {
-    // TODO: Conectar con API real
-    console.log('Buscando asteroide:', searchQuery);
+  // Selection tab state: date range and asteroid list from backend
+  const today = new Date();
+  const defaultStart = new Date(today.getTime() - 7 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const defaultEnd = today.toISOString().slice(0, 10);
+  const [startDate, setStartDate] = useState<string>(defaultStart);
+  const [endDate, setEndDate] = useState<string>(defaultEnd);
+  const [asteroids, setAsteroids] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [selectedId, setSelectedId] = useState<string>('');
+
+  const fetchAsteroids = async () => {
+    setLoading(true);
+    setError('');
+    setAsteroids([]);
+    setSelectedId('');
+    try {
+      const url = `${BACKEND_URL}/asteroides?start_date=${startDate}&end_date=${endDate}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      // Guardar el content-type para evitar intentar parsear HTML (p.ej. index.html) como JSON
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        // If we got HTML (starts with <!doctype or <), show a helpful error message
+        const snippet = text.slice(0, 300).replace(/\n/g, ' ');
+        throw new Error(`Respuesta no JSON desde backend (${url}): ${snippet}`);
+      }
+
+      const data = await res.json();
+      setAsteroids(data.asteroids || []);
+    } catch (e: any) {
+      // Provide clearer messages for HTML/non-JSON responses or connection refused
+      const msg = e?.message || String(e);
+      if (msg.includes('<!doctype') || msg.includes('<html')) {
+        setError('Respuesta inesperada (HTML) al consultar el backend. ¿Está corriendo el servicio en http://localhost:5000 ?');
+      } else if (msg.includes('ECONNREFUSED') || msg.includes('Failed to fetch')) {
+        setError('No se puede conectar al backend. Inicia el servidor Python (backend) y/o configura VITE_BACKEND_URL.');
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
+  
 
   const handleInputChange = (field: keyof AsteroidData, value: string) => {
     setFormData(prev => ({
@@ -116,20 +162,75 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
       <div className={styles.content}>
         {selectedTab === 'Seleccionar' ? (
           <div className={styles.searchContainer}>
-            <input
-              type="text"
-              className={styles.searchBar}
-              placeholder="Buscar por nombre..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <img
-              src="/material-symbols-light_search-rounded.svg"
-              alt="Buscar"
-              className={styles.searchIcon}
-              onClick={handleSearch}
-            />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label className={styles.label}>Fecha inicio</label>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label className={styles.label}>Fecha fin</label>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <button className={styles.simulateButton} onClick={async () => { await fetchAsteroids(); }}>
+                  Listar
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              {loading && <div>Cargando asteroides...</div>}
+              {error && <div style={{ color: 'var(--danger, #ff6b6b)' }}>{error}</div>}
+              {!loading && asteroids.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label className={styles.label}>Seleccione asteroide</label>
+                  <select className={styles.input} value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
+                    <option value="">-- Seleccionar --</option>
+                    {asteroids.map(a => (
+                      <option key={a.id} value={a.id}>{a.name} (a={a.a.toFixed(3)} AU)</option>
+                    ))}
+                  </select>
+                  <div>
+                    <button
+                      className={styles.simulateButton}
+                      onClick={() => {
+                        const ast = asteroids.find(x => x.id === selectedId);
+                        if (ast) {
+                          // Map backend asteroid to FormularioAsteroide AsteroidData and simulate
+                          const mapped = {
+                            nombre: ast.name,
+                            semiMajorAxis: ast.a,
+                            eccentricity: ast.e,
+                            inclination: (ast.i || 0) * 180 / Math.PI,
+                            longitudeAscending: (ast.Omega || 0) * 180 / Math.PI,
+                            argumentPerihelion: (ast.omega || 0) * 180 / Math.PI,
+                            initialPhase: (ast.M || 0) * 180 / Math.PI,
+                            masa: ast.masa || 0,
+                            radio: ast.radio || 0,
+                            densidad: ast.densidad || 0
+                          };
+                          onSimulate(mapped);
+                        }
+                      }}
+                      disabled={!selectedId}
+                    >
+                      Simular
+                    </button>
+                  </div>
+                </div>
+              )}
+              {!loading && asteroids.length === 0 && <div style={{ marginTop: 8 }}>No se han listado asteroides aún.</div>}
+            </div>
           </div>
         ) : (
           <div className={styles.formContainer}>

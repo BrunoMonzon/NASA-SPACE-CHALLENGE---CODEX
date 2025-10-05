@@ -48,7 +48,6 @@ const KineticImpactador: React.FC<KineticImpactadorProps> = ({ onBack, asteroidD
   const asteroidData = asteroidFromProp ?? initialAsteroid;
   const [spacecraftData, setSpacecraftData] = useState<SpacecraftData>(initialSpacecraft);
   // removed impactIndex: impact point determined by spacecraft trajectory (impactJD)
-  const [reloadKey, setReloadKey] = useState<number>(0);
 
   const handleSpacecraftChange = (key: keyof SpacecraftData, value: number) => {
     setSpacecraftData(prev => ({ ...prev, [key]: value }));
@@ -73,7 +72,6 @@ const KineticImpactador: React.FC<KineticImpactadorProps> = ({ onBack, asteroidD
               }}
               spacecraftData={spacecraftData}
               asteroidMass={asteroidData.masa}
-                reloadKey={reloadKey}
             />
           </div>
 
