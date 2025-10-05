@@ -6,6 +6,7 @@ import MenuMitigacion from "./MenuMitigacion";
 import KineticImpactador from "./KineticImpactador";
 import GravityTractor from "./GravityTractor";
 import LaserAblation from "./LaserAblation";
+import VisualizacionAsteroide from "./VisualizacionAsteroide"; // Nuevo import
 
 interface AsteroidData {
   nombre: string;
