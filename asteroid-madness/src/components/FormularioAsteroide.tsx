@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import styles from './FormularioAsteroide.module.css';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 type TabType = 'Select' | 'Configure';
 
 interface AsteroidData {
@@ -45,7 +47,8 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
   const [selectedTab, setSelectedTab] = useState<TabType>('Select');
   const [searchQuery, setSearchQuery] = useState('');
   const [popup, setPopup] = useState<PopupInfo>({ show: false, content: '', x: 0, y: 0 });
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   
   const [formData, setFormData] = useState<AsteroidData>({
     nombre: '',
@@ -61,11 +64,54 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
     velocidad: 0
   });
 
+  // Date range and asteroid list states
+  const today = new Date();
+  const defaultStart = new Date(today.getTime() - 7 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const defaultEnd = today.toISOString().slice(0, 10);
+  const [startDate, setStartDate] = useState<string>(defaultStart);
+  const [endDate, setEndDate] = useState<string>(defaultEnd);
+  const [asteroids, setAsteroids] = useState<Array<any>>([]);
+  const [selectedId, setSelectedId] = useState<string>('');
+
+  const fetchAsteroids = async () => {
+    setIsLoading(true);
+    setError('');
+    setAsteroids([]);
+    setSelectedId('');
+    try {
+      const url = `${BACKEND_URL}/asteroides?start_date=${startDate}&end_date=${endDate}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        const snippet = text.slice(0, 300).replace(/\n/g, ' ');
+        throw new Error(`Non-JSON response from backend (${url}): ${snippet}`);
+      }
+
+      const data = await res.json();
+      setAsteroids(data.asteroids || []);
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      if (msg.includes('<!doctype') || msg.includes('<html')) {
+        setError('Unexpected response (HTML) from backend. Is the service running at http://localhost:5000?');
+      } else if (msg.includes('ECONNREFUSED') || msg.includes('Failed to fetch')) {
+        setError('Cannot connect to backend. Start the Python server and/or configure VITE_BACKEND_URL.');
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-
+    setIsLoading(true);
+    setError('');
     try {
-      const response = await fetch('https://nasa-space-challenge-codex.onrender.com/asteroid', {
+      const response = await fetch(`${BACKEND_URL}/asteroid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +124,6 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
       }
 
       const data = await response.json();
-      console.log('Result:', data);
 
       setFormData({
         nombre: data.full_name || '',
@@ -88,17 +133,38 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
         longitudeAscending: data['Ω (node)'] || 0,
         argumentPerihelion: data['ω (peri)'] || 0,
         initialPhase: data['M₀'] || 0,
-        masa: data['masa (kg)'] || 0,
+        masa: (data['masa (kg)'] / 1000) || 0,
         radio: data['radio (km)'] || 0,
         densidad: data['densidad (kg/m³)'] || 0,
         velocidad: data['velocidad (m/s)'] || 0
       });
 
       setSelectedTab('Configure');
-
     } catch (error) {
       console.error('Error searching for asteroid:', error);
-      alert('Error searching for the asteroid. Please check the name or server connection.');
+      setError('Error searching for the asteroid. Please check the name or server connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLoadFromList = () => {
+    const ast = asteroids.find(x => x.id === selectedId);
+    if (ast) {
+      setFormData({
+        nombre: ast.name || '',
+        semiMajorAxis: ast.a || 0,
+        eccentricity: ast.e || 0,
+        inclination: (ast.i || 0) * 180 / Math.PI,
+        longitudeAscending: (ast.Omega || 0) * 180 / Math.PI,
+        argumentPerihelion: (ast.omega || 0) * 180 / Math.PI,
+        initialPhase: (ast.M || 0) * 180 / Math.PI,
+        masa: (ast.masa / 1000) || 0,
+        radio: ast.radio || 0,
+        densidad: (ast.densidad * 1000) || 0,
+        velocidad: 0
+      });
+      setSelectedTab('Configure');
     }
   };
 
@@ -145,7 +211,7 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
     initialPhase: 'Initial angular position of the asteroid in its orbit at time t=0.',
     masa: 'Mass of the asteroid, measured in tons.',
     radio: 'Radius of the asteroid, measured in kilometers (km).',
-    densidad: 'Density of the asteroid, measured in grams per cubic centimeter (g/cm³).',
+    densidad: 'Density of the asteroid, measured in kilograms per cubic meter (kg/m³).',
     velocidad: 'Velocity of the asteroid relative to Earth at the time of impact, measured in meters per second (m/s).'
   };
 
@@ -185,6 +251,58 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
               className={styles.searchIcon}
               onClick={handleSearch}
             />
+
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label className={styles.label}>Start Date</label>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label className={styles.label}>End Date</label>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <button className={styles.simulateButton} onClick={fetchAsteroids} disabled={isLoading}>
+                  List
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              {isLoading && <div>Loading asteroids...</div>}
+              {error && <div style={{ color: 'var(--danger, #ff6b6b)' }}>{error}</div>}
+              {!isLoading && asteroids.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label className={styles.label}>Select asteroid</label>
+                  <select className={styles.input} value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
+                    <option value="">-- Select --</option>
+                    {asteroids.map(a => (
+                      <option key={a.id} value={a.id}>{a.name} (a={a.a.toFixed(3)} AU)</option>
+                    ))}
+                  </select>
+                  <div>
+                    <button
+                      className={styles.simulateButton}
+                      onClick={handleLoadFromList}
+                      disabled={!selectedId || isLoading}
+                    >
+                      Load
+                    </button>
+                  </div>
+                </div>
+              )}
+              {!isLoading && asteroids.length === 0 && <div style={{ marginTop: 8 }}>No asteroids listed yet.</div>}
+            </div>
           </div>
         ) : (
           <div className={styles.formContainer}>
@@ -418,7 +536,6 @@ const FormularioAsteroide = ({ onSimulate }: FormularioAsteroideProps) => {
             left: `${popup.x}px`, 
             top: `${popup.y}px` 
           }}
-          onMouseEnter={() => setPopup(prev => ({ ...prev, show: false }))}
         >
           {popup.content}
         </div>

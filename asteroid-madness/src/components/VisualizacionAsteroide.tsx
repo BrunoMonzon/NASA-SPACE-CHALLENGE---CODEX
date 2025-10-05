@@ -41,7 +41,6 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
 }) => {
   const [currentAsteroidData, setCurrentAsteroidData] = useState<AsteroidData>(asteroidData);
   const [hasIntersections, setHasIntersections] = useState(false);
-  const [isLoadingImpact, setIsLoadingImpact] = useState(false);
 
   const handleParamChange = (field: keyof AsteroidData, value: number) => {
     setCurrentAsteroidData(prev => ({
@@ -50,42 +49,11 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
     }));
   };
 
-  const handleContinueToImpactDay = async () => {
-    setIsLoadingImpact(true);
-    
-    try {
-      // Call the /impact API with current asteroid data
-      const response = await fetch('http://localhost:5000/impact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          a: currentAsteroidData.semiMajorAxis,
-          e: currentAsteroidData.eccentricity,
-          i: currentAsteroidData.inclination,
-          om: currentAsteroidData.longitudeAscending,
-          w: currentAsteroidData.argumentPerihelion,
-          ma: currentAsteroidData.initialPhase
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Error predicting impact');
-      }
-
-      const impactData: ImpactData = await response.json();
-      console.log('Impact prediction result:', impactData);
-
-      // Pass impact data to parent component
-      onContinue(impactData);
-      
-    } catch (error) {
-      console.error('Error predicting impact:', error);
-      alert('Error predicting impact. Please check the server connection.');
-    } finally {
-      setIsLoadingImpact(false);
-    }
+  const handleContinueToImpactDay = () => {
+    const impactData: ImpactData = {
+      impact: hasIntersections
+    };
+    onContinue(impactData);
   };
 
   const calculateMOID = () => {
@@ -165,9 +133,8 @@ const VisualizacionAsteroide: React.FC<VisualizacionAsteroideProps> = ({
                 className={styles.continueButton} 
                 onClick={handleContinueToImpactDay} 
                 style={{ marginTop: '15px', width: '100%' }}
-                disabled={isLoadingImpact}
               >
-                {isLoadingImpact ? 'Calculating Impact...' : 'Continue to Impact Day →'}
+                Continue to Impact Day →
               </button>
             )}
           </div>
