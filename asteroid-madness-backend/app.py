@@ -5,7 +5,15 @@ import math
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
-CORS(app)
+
+# 🔧 Configuración CORS permisiva (para pruebas/desarrollo)
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # 🔗 Configuración de conexión a PostgreSQL (Neon)
 db_config = {
@@ -60,8 +68,11 @@ def orbital_position(a, e, i, Ω, ω, M):
     z = (sin_ω * sin_i) * x_orb + (cos_ω * sin_i) * y_orb
     return x, y, z
 
-@app.route('/impact', methods=['POST'])
+@app.route('/impact', methods=['POST', 'OPTIONS'])
 def predict_impact():
+    if request.method == 'OPTIONS':
+        return '', 204
+    
     data = request.get_json()
     try:
         a = float(data.get('a'))
@@ -109,8 +120,11 @@ def predict_impact():
         import traceback
         return jsonify({"error": str(e), "details": traceback.format_exc()}), 500
 
-@app.route('/asteroid', methods=['POST'])
+@app.route('/asteroid', methods=['POST', 'OPTIONS'])
 def get_asteroid():
+    if request.method == 'OPTIONS':
+        return '', 204
+    
     data = request.get_json()
     if not data or 'name' not in data:
         return jsonify({"error": "Debe enviar un campo 'name' en el body JSON"}), 400
@@ -145,6 +159,11 @@ def get_asteroid():
     except Exception as e:
         import traceback
         return jsonify({"error": str(e), "details": traceback.format_exc()}), 500
+
+# Ruta de health check
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
